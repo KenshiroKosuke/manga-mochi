@@ -26,6 +26,7 @@ export async function fetchAndExtract(
   { api_session, home_popup_start_time, manga_one_session }
 ) {
   // You can change these headers to whatever. I just grab them from my browser.
+  // If you get error fetching this endpoint, try opening mangaone in browser, look in DevTool and see the if there are any differences here and there.
   const result = await fetch(
     `https://manga-one.com/api/client?rq=viewer_v2&title_id=${title_id}&chapter_id=${chapter_id}&page=1&limit=10&sort_type=desc&list_type=chapter&free_point=0&event_point=0&paid_point=0`,
     {
@@ -42,7 +43,7 @@ export async function fetchAndExtract(
         "sec-fetch-mode": "cors",
         "sec-fetch-site": "same-origin",
         cookie: `api_session=${api_session}; is_logged_in=true; is_app_connected=true; home_popup_start_time=${home_popup_start_time}; manga_one_session=${manga_one_session}`,
-        Referer: "https://manga-one.com/manga/2852/chapter/321769?type=chapter&sort_type=desc&page=1&limit=10",
+        Referer: `https://manga-one.com/manga/${title_id}/chapter/${chapter_id}?type=chapter&sort_type=desc&page=1&limit=10`,
       },
       body: null,
       method: "POST",
