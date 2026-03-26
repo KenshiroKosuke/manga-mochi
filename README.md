@@ -11,10 +11,13 @@ If you need any manga site to be supported, please open an issue.
 | node |  >=20  |
 
 ## Usage
+
 ```bash
 $ npm install 
 ```
+
 Then
+
 ```bash
 $  node main.mjs <<url>>
 ```
@@ -69,4 +72,3 @@ $ pnpm build:mac
 # For Linux
 $ pnpm build:linux
 ```
-

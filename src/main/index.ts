@@ -1,7 +1,11 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { loadConfig, saveConfig } from './appConfig'
+import { loadPlugins } from './loadPlugins'
+import { ipcMainRegisterHandler } from './responseWrapper'
+import { NoMatchingPluginError } from './errors'
 
 function createWindow(): void {
   // Create the browser window.
@@ -18,6 +22,7 @@ function createWindow(): void {
   })
 
   mainWindow.on('ready-to-show', () => {
+    console.log('ready-to-show')
     mainWindow.show()
   })
 
@@ -28,6 +33,8 @@ function createWindow(): void {
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
+  console.log(is.dev)
+  console.log(process.env['ELECTRON_RENDERER_URL'])
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
@@ -38,9 +45,14 @@ function createWindow(): void {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
+
+  // ... create window code ...
+
+  const plugins = await loadPlugins()
+  let currentConfig = await loadConfig()
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
@@ -50,7 +62,61 @@ app.whenReady().then(() => {
   })
 
   // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
+  ipcMainRegisterHandler(ipcMain, 'ping', () => console.log('pong'))
+
+  // 1. Get Initial Data
+  ipcMainRegisterHandler(ipcMain, 'get-app-data', () => {
+    const appData = {
+      config: currentConfig,
+      plugins: plugins.map((p) => ({
+        ...p,
+        checkUrl: undefined,
+        download: undefined,
+        validateChapterUrl: undefined,
+        downloadChapter: undefined
+      }))
+    }
+    return appData
+    // Note: We strip functions before sending to renderer, send only metadata
+    //       since electron cannot clone function
+  })
+
+  // 2. Select Directory
+  ipcMainRegisterHandler(ipcMain, 'select-dir', async () => {
+    const result = await dialog.showOpenDialog({ properties: ['openDirectory'] })
+    return result.canceled ? null : result.filePaths[0]
+  })
+
+  // 3. Save Config
+  ipcMainRegisterHandler(ipcMain, 'save-config', async (_, newConfig) => {
+    currentConfig = newConfig
+    await saveConfig(currentConfig)
+    return true
+  })
+
+  // 4. Perform Download Logic
+  ipcMainRegisterHandler(ipcMain, 'start-download', async (_, url) => {
+    console.log(`[start-download] Find correct plugin from ${plugins.length} plugin(s)`)
+    const matchedPlugin = plugins.find((plugin) => {
+      console.log(plugin.id)
+      return plugin.validateChapterUrl(url).isValid
+    })
+
+    if (!matchedPlugin) {
+      throw new NoMatchingPluginError({
+        url: url
+      })
+    }
+
+    const siteConfig = currentConfig.sites[matchedPlugin.id]
+    const { downloadDir, namingSchema } = currentConfig.global
+
+    if (!downloadDir) throw new Error('Download directory not set.')
+
+    // Run the plugin logic
+    await matchedPlugin.downloadChapter(url, downloadDir, namingSchema, siteConfig)
+    return `Download successful via ${matchedPlugin.id}`
+  })
 
   createWindow()
 
