@@ -1,5 +1,5 @@
-import { ConfigField } from "../types/plugin";
-import { InvalidConfigError } from "./errors";
+import { ConfigField } from '../types/plugin'
+import { InvalidConfigError } from './errors'
 
 export function validateConfigFields<T extends Record<string, string>>(
   config: unknown,

@@ -1,8 +1,8 @@
 /* --- Global & Reset --- */
 :root {
-  --bg-dark: #0f172a;       /* Very dark blue/gray */
-  --bg-panel: #1e293b;      /* Panel background */
-  --bg-hover: #334155;      /* Hover state */
+  --bg-dark: #0f172a; /* Very dark blue/gray */
+  --bg-panel: #1e293b; /* Panel background */
+  --bg-hover: #334155; /* Hover state */
   --border-color: #334155;
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
@@ -239,9 +239,19 @@ input {
   background-color: rgba(0, 0, 0, 0.2);
 }
 
-.status-box.loading { border-color: var(--text-secondary); }
-.status-box.success { border-color: #22c55e; color: #86efac; background-color: rgba(34, 197, 94, 0.1); }
-.status-box.error { border-color: #ef4444; color: #fca5a5; background-color: rgba(239, 68, 68, 0.1); }
+.status-box.loading {
+  border-color: var(--text-secondary);
+}
+.status-box.success {
+  border-color: #22c55e;
+  color: #86efac;
+  background-color: rgba(34, 197, 94, 0.1);
+}
+.status-box.error {
+  border-color: #ef4444;
+  color: #fca5a5;
+  background-color: rgba(239, 68, 68, 0.1);
+}
 
 .config-footer {
   margin-top: auto;

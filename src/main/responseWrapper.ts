@@ -1,7 +1,7 @@
-import { IpcMain } from "electron/main";
-import { SafeResult } from "../types/response";
+import { IpcMain } from 'electron/main'
+import { SafeResult } from '../types/response'
 
-export function ipcMainRegisterHandler (ipcMain:IpcMain, ...args: Parameters<IpcMain["handle"]>) {
+export function ipcMainRegisterHandler(ipcMain: IpcMain, ...args: Parameters<IpcMain['handle']>) {
   ipcMain.handle(args[0], handlerWrapper(args[1]))
 }
 
@@ -36,7 +36,7 @@ export const handlerWrapper = <TArgs extends any[], TReturn>(fn: (...args: TArgs
           }) as any
       }
 
-      console.log("Sync return", result);
+      console.log('Sync return', result)
 
       // Handle Synchronous Result
       return { success: true, data: result } as any
@@ -52,13 +52,13 @@ export const handlerWrapper = <TArgs extends any[], TReturn>(fn: (...args: TArgs
 
 export function formatResponseError(error: unknown) {
   if (error instanceof Error) {
-    const { name, message } = error;
-    const { stack, cause, ...customProperties } = {...error}
+    const { name, message } = error
+    const { stack, cause, ...customProperties } = { ...error }
     return {
-      ...customProperties, 
+      ...customProperties,
       name: name,
-      message: message,
-    };
+      message: message
+    }
   }
   return {
     name: 'Unknown Invoking Error',

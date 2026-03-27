@@ -48,7 +48,7 @@ export default function App(): React.JSX.Element {
 
   useEffect(() => {
     window.backendAPI.getAppData().then((result) => {
-      console.log(result);
+      console.log(result)
       if (result.success) {
         const { data } = result
         setConfig(data.config)
@@ -63,7 +63,7 @@ export default function App(): React.JSX.Element {
   const handleConfigUpdate = async (newConfig: AppConfig): Promise<void> => {
     setConfig(newConfig)
     const result = await window.backendAPI.saveConfig(newConfig)
-    if (result.success == false){
+    if (result.success == false) {
       throw result.error
     }
   }
@@ -74,7 +74,7 @@ export default function App(): React.JSX.Element {
     <div className="app-container">
       <Sidebar config={config} plugins={plugins} onConfigUpdate={handleConfigUpdate} />
       <div className="main-tab">
-        <MainTab config={config} plugins={plugins}/>
+        <MainTab config={config} plugins={plugins} />
       </div>
     </div>
   )

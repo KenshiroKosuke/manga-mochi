@@ -19,5 +19,8 @@ export interface BackendAPI {
    */
   startDownload: (
     url: string
-  ) => SafeResultPromise<string, IpcMainErrorResponse['INVALID_CHAPTER_URL_ERROR']>
+  ) => SafeResultPromise<
+    string,
+    IpcMainErrorResponse['INVALID_CHAPTER_URL_ERROR'] | IpcMainErrorResponse['NO_PAGE_ERROR']
+  >
 }

@@ -1,11 +1,15 @@
 import path from 'node:path'
+import { setTimeout } from 'timers/promises'
 import { DownloadChapterFunction } from '../../../types/plugin'
 import { MangaOneConfig } from '../../../types/plugins/mangaone'
 import { validateConfigFields } from '../../checkPluginUtil'
 import { InvalidChapterUrlError } from '../../errors'
 import { mangaone_configFields } from './configFields'
 import { mangaone_validateChapterUrl } from './urlValidator'
-import { mkdir, writeFile } from 'node:fs/promises'
+import { detectPageExtension, writeSinglePage } from '../writePage.util'
+import { ensureDir } from '../../directory.util'
+import { mangaone_fetchAndExtractPageList } from './extractor/extractChapter'
+import { mangaone_fetchAndDecryptPage } from './extractor/decryptPage'
 
 export const mangaone_downloadChapter: DownloadChapterFunction = async (
   url,
@@ -23,19 +27,48 @@ export const mangaone_downloadChapter: DownloadChapterFunction = async (
     })
   }
 
-  // Mock: Create a folder for the manga
-  const mangaTitle = 'MockMangaTitle'
-  const chapterTitle = 'Chapter_2'
-  const fullDir = path.join(savePath, mangaTitle, chapterTitle)
+  const { urls, decryptData, chapterName, chapterNumber, mangaName } =
+    await mangaone_fetchAndExtractPageList(
+      {
+        title_id: chapterUrlValidationResult.mangaId,
+        chapter_id: chapterUrlValidationResult.chapterId
+      },
+      {
+        api_session: configData.api_session,
+        manga_one_session: configData.manga_one_session
+      }
+    )
 
-  await mkdir(fullDir, { recursive: true })
+  const fullDir = path.join(
+    savePath,
+    mangaName ?? chapterUrlValidationResult.mangaId,
+    chapterNumber && chapterName
+      ? chapterNumber + ' ' + chapterName
+      : chapterUrlValidationResult.chapterId
+  )
+  console.log(`[mangaone_downloadChapter] Prepare writing file to ${fullDir} ...`)
+  await ensureDir(fullDir)
+  const pageLength = urls.length
+  for (let pageNumber = 1; pageNumber <= pageLength; pageNumber++) {
+    const url = urls[pageNumber - 1]
+    const bufferData = await mangaone_fetchAndDecryptPage(url, decryptData)
+    const detectedExtension = detectPageExtension(bufferData, '.webp')
+    await writeSinglePage({
+      extension: detectedExtension,
+      fullDir: fullDir,
+      namingSchema: namingSchema,
+      pageData: bufferData,
+      pageNumber: pageNumber
+    })
 
-  // Mock: Generate 10 files based on naming schema (e.g., p00X -> p001.txt)
-  for (let i = 1; i <= 10; i++) {
-    // Logic to handle 'X' placeholder padding
-    const xCount = (namingSchema.match(/X/g) || []).length
-    const numStr = i.toString().padStart(xCount, '0')
-    const fileName = namingSchema.replace(/X+/g, numStr) + '.txt'
-    await writeFile(path.join(fullDir, fileName), `Content for ${fileName}`)
+    if (pageNumber !== pageLength) {
+      const sleepTime = 0.5
+      console.log(`[mangaone_downloadChapter] Sleeping ${sleepTime} seconds ...`)
+      await setTimeout(sleepTime * 1000)
+    }
   }
+  // Mock: Create a folder for the manga
+  // const mangaTitle = 'MockMangaTitle'
+  // const chapterTitle = 'Chapter_2'
+  // const fullDir = path.join(savePath, mangaTitle, chapterTitle)
 }

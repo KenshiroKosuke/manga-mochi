@@ -13,17 +13,17 @@ export interface ConfigField {
   description?: string
 }
 
-export type ValidateChapterUrl = (url: string) =>
-    | {
-        isValid: true
-        mangaId?: string
-        chapterId: string
-      }
-    | {
-        isValid: false
-        mangaId: null
-        chapterId: null
-      }
+export type ValidateChapterUrl<WithMangaId extends boolean = false> = (url: string) =>
+  | {
+      isValid: true
+      mangaId: WithMangaId extends true ? string : string | undefined
+      chapterId: string
+    }
+  | {
+      isValid: false
+      mangaId: null
+      chapterId: null
+    }
 
 export type DownloadChapterFunction = (
   url: string,
@@ -50,7 +50,7 @@ export interface MangaPlugin {
    * @param url
    * @returns validation result (mangaId might not be part of url)
    */
-  validateChapterUrl: ValidateChapterUrl
+  validateChapterUrl: ValidateChapterUrl<any>
   /**
    * Download method
    */

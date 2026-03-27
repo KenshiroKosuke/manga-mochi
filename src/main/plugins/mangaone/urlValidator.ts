@@ -6,7 +6,7 @@ import { ValidateChapterUrl } from '../../../types/plugin'
 // 3. \/chapter\/              -> Literal path match
 // 4. (\d+)                    -> Capture Group 2: The Chapter ID (digits)
 export const mangaone_chapterRegexList: RegExp[] = [/manga-one\.com\/manga\/(\d+)\/chapter\/(\d+)/]
-export const mangaone_validateChapterUrl: ValidateChapterUrl = (url) => {
+export const mangaone_validateChapterUrl: ValidateChapterUrl<true> = (url) => {
   for (const chapterRegex of mangaone_chapterRegexList) {
     const match = url.match(chapterRegex)
     if (match && match.length <= 3) {

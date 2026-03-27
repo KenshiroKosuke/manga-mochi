@@ -38,8 +38,8 @@ export default function ConfigPopup({
   const handleSelectDir = async (): Promise<void> => {
     const result = await window.backendAPI.selectDir()
     if (result.success) {
-      const {data} = result
-      if (data !== null){
+      const { data } = result
+      if (data !== null) {
         setLocalConfig((prev) => ({
           ...prev,
           global: { ...prev.global, downloadDir: data }

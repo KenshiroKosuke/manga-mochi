@@ -2,7 +2,13 @@ import { useState } from 'react'
 import { AppConfig } from 'src/types/appConfig'
 import { MangaPlugin } from 'src/types/plugin'
 
-export default function MainTab({ config, plugins }: { config: AppConfig, plugins: MangaPlugin[] }): React.JSX.Element {
+export default function MainTab({
+  config,
+  plugins
+}: {
+  config: AppConfig
+  plugins: MangaPlugin[]
+}): React.JSX.Element {
   const [url, setUrl] = useState('')
   const [matchedPlugin, setMatchedPlugin] = useState<MangaPlugin | null>(null)
   const [status, setStatus] = useState<{
@@ -31,10 +37,12 @@ export default function MainTab({ config, plugins }: { config: AppConfig, plugin
     if (!url) return
 
     // Loop through plugins and test the URL against their regex list
-    const matched = plugins.find(plugin => {
-      if (!plugin.chapterRegexList) {return false}
-      return plugin.chapterRegexList.some(regex => {
-        // Note: Electron IPC usually preserves RegExp objects via Structured Clone, 
+    const matched = plugins.find((plugin) => {
+      if (!plugin.chapterRegexList) {
+        return false
+      }
+      return plugin.chapterRegexList.some((regex) => {
+        // Note: Electron IPC usually preserves RegExp objects via Structured Clone,
         // but it's safe to wrap it just in case it arrived as a string.
         const rx = regex instanceof RegExp ? regex : new RegExp(regex)
         return rx.test(url)
@@ -61,12 +69,19 @@ export default function MainTab({ config, plugins }: { config: AppConfig, plugin
         // Optional: Reset URL after successful download
         // setUrl(''); setMatchedPlugin(null);
       } else {
-        if (result.error.errorCode === 'INVALID_CHAPTER_URL_ERROR') {
-          setStatus({ type: 'error', msg: result.error.message })
+        const error = result.error
+        let code = `[${result.error.errorCode}]`
+        if (error.errorCode === 'INVALID_CHAPTER_URL_ERROR') {
+          setStatus({ type: 'error', msg: `${code} ${error.message}` })
+        } else if (error.errorCode === 'NO_PAGE_ERROR') {
+          setStatus({
+            type: 'error',
+            msg: `${code} ${error.message} Hint: ${error.hint}`
+          })
         } else {
           setStatus({
             type: 'error',
-            msg: result.error?.message ?? 'Unknown Error: ' + JSON.stringify(result)
+            msg: `[UnknownError] ${JSON.stringify(error)}`
           })
         }
       }
@@ -99,18 +114,18 @@ export default function MainTab({ config, plugins }: { config: AppConfig, plugin
         />
         {/* Dynamic Button based on matched state */}
         {!matchedPlugin ? (
-          <button 
-            className="btn-primary" 
-            onClick={handleCheck} 
+          <button
+            className="btn-primary"
+            onClick={handleCheck}
             disabled={!url}
             style={{ backgroundColor: !url ? '#4b5563' : undefined }}
           >
             Check URL
           </button>
         ) : (
-          <button 
-            className="btn-primary" 
-            onClick={handleStart} 
+          <button
+            className="btn-primary"
+            onClick={handleStart}
             disabled={status.type === 'loading'}
             style={{ backgroundColor: '#22c55e' }}
           >

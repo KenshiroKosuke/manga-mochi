@@ -1,8 +1,10 @@
 // Single Source of Truth for Error Codes
 export type IpcMainErrorDataMap = {
   INVALID_CHAPTER_URL_ERROR: { url: string }
-  NO_MATCHING_PLUGIN_ERROR: { url: string },
-  INVALID_CONFIG_ERROR: { configs: {name: string, value: any, error: any}[] }
+  NO_MATCHING_PLUGIN_ERROR: { url: string }
+  INVALID_CONFIG_ERROR: { configs: { name: string; value: any; error: any }[] }
+  NO_PAGE_ERROR: { hint: string }
+  EXTRACTION_FAILED_ERROR: { plugin: string; reason: string }
 }
 
 // Union type for convenience
