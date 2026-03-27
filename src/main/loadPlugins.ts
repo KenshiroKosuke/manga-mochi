@@ -9,7 +9,7 @@ import type { MangaPlugin } from '../types/plugin'
 export async function loadPlugins(): Promise<MangaPlugin[]> {
   // 1. Vite specific: Find all .ts files in the sibling 'plugins' folder
   // { eager: true } means load them immediately (synchronously)
-  const modules = import.meta.glob('./plugins/*.ts', { eager: true })
+  const modules = import.meta.glob('./plugins/*/index.ts', { eager: true })
 
   const plugins: MangaPlugin[] = []
 

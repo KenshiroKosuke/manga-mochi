@@ -13,6 +13,26 @@ export interface ConfigField {
   description?: string
 }
 
+export type ValidateChapterUrl = (url: string) =>
+    | {
+        isValid: true
+        mangaId?: string
+        chapterId: string
+      }
+    | {
+        isValid: false
+        mangaId: null
+        chapterId: null
+      }
+
+export type DownloadChapterFunction = (
+  url: string,
+  savePath: string,
+  namingSchema: string,
+  configData: unknown // After main process used validateChapterUrl to find the correct plugin.
+  // Could be `undefined` if the config is missing from .mangamochi entirely
+) => Promise<void>
+
 // The shape every website plugin must follow
 export interface MangaPlugin {
   // name: string
@@ -25,30 +45,14 @@ export interface MangaPlugin {
    */
   configFields: ConfigField[]
   chapterRegexList: RegExp[]
-
   /**
    * Validation method
    * @param url
    * @returns validation result (mangaId might not be part of url)
    */
-  validateChapterUrl: (url: string) =>
-    | {
-        isValid: true
-        mangaId?: string
-        chapterId: string
-      }
-    | {
-        isValid: false
-        mangaId: null
-        chapterId: null
-      }
-
-  // Download method
-  downloadChapter: (
-    url: string,
-    savePath: string,
-    namingSchema: string,
-    configData: unknown // After main process used validateChapterUrl to find the correct plugin.
-                        // Could be `undefined` if the config is missing from .mangamochi entirely
-  ) => Promise<void>
+  validateChapterUrl: ValidateChapterUrl
+  /**
+   * Download method
+   */
+  downloadChapter: DownloadChapterFunction
 }
