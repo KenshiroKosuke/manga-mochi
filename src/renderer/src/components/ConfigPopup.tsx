@@ -96,7 +96,7 @@ export default function ConfigPopup({
             </>
           ) : (
             <>
-              {targetPlugin?.configFields.map((field) => (
+              {targetPlugin?.uiConfigFields.map((field) => (
                 <div key={field.fieldName} className="form-group">
                   <label title={field.description}>{field.fieldName}</label>
                   <input
@@ -108,7 +108,7 @@ export default function ConfigPopup({
                 </div>
               ))}
 
-              {(!targetPlugin?.configFields || targetPlugin.configFields.length === 0) && (
+              {(!targetPlugin?.uiConfigFields || targetPlugin.uiConfigFields.length === 0) && (
                 <p style={{ color: '#94a3b8', textAlign: 'center' }}>No configuration needed.</p>
               )}
             </>

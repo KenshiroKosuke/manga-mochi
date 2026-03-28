@@ -1,12 +1,12 @@
-export interface ConfigField {
-  /**
-   * Frontend will mark this field as sensitive password
-   */
-  isSensitive: boolean
+export interface UIConfigField {
   /**
    * Frontend will use this as label
    */
   fieldName: string
+  /**
+   * Frontend will mark this field as sensitive password
+   */
+  isSensitive?: boolean
   /**
    * Frontend will use this as tooltip text
    */
@@ -43,7 +43,7 @@ export interface MangaPlugin {
   /**
    * Fields the user needs to configure (e.g., username, password)
    */
-  configFields: ConfigField[]
+  uiConfigFields: UIConfigField[]
   chapterRegexList: RegExp[]
   /**
    * Validation method

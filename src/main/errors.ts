@@ -27,7 +27,13 @@ export class NoMatchingPluginError extends MainResponseError {
 export class InvalidConfigError extends MainResponseError {
   readonly errorCode = 'INVALID_CONFIG_ERROR'
   constructor(data: IpcMainErrorDataMap['INVALID_CONFIG_ERROR']) {
-    super(`Some configs are invalid. Please check your config file.`, data)
+    const configErrorString = data.configs
+      .map(
+        (configError) =>
+          `'${configError.name}' ${configError.error} (received: ${configError.value})`
+      )
+      .join(' | ')
+    super(`Some configs are invalid. Please check your config file. ${configErrorString}`, data)
   }
 }
 

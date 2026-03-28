@@ -6,7 +6,7 @@ import { mangaone_chapterRegexList, mangaone_validateChapterUrl } from './urlVal
 const plugin: MangaPlugin = {
   // name: 'MangaOne',
   id: 'MangaOne',
-  configFields: mangaone_configFields,
+  uiConfigFields: mangaone_configFields,
   chapterRegexList: mangaone_chapterRegexList,
   validateChapterUrl: mangaone_validateChapterUrl,
   downloadChapter: mangaone_downloadChapter

@@ -4,5 +4,5 @@ export interface AppConfig {
     namingSchema: string
     pinnedSites: string[] // Stores the order of plugins
   }
-  sites: Record<string, unknown> // Stores credentials per site ID
+  sites: Record<string, unknown> // Stores configs per site ID
 }

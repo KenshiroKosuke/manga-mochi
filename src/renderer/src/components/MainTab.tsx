@@ -78,6 +78,13 @@ export default function MainTab({
             type: 'error',
             msg: `${code} ${error.message} Hint: ${error.hint}`
           })
+        } else if (
+          error.errorCode === 'INVALID_CONFIG_ERROR'
+        ){
+          setStatus({
+            type: 'error',
+            msg: `${code} ${error.message}`
+          })
         } else {
           setStatus({
             type: 'error',

@@ -1,15 +1,14 @@
 import path from 'node:path'
 import { setTimeout } from 'timers/promises'
 import { DownloadChapterFunction } from '../../../types/plugin'
-import { MangaOneConfig } from '../../../types/plugins/mangaone'
-import { validateConfigFields } from '../../checkPluginUtil'
 import { InvalidChapterUrlError } from '../../errors'
-import { mangaone_configFields } from './configFields'
+import { MangaOneConfigSchema } from './configFields'
 import { mangaone_validateChapterUrl } from './urlValidator'
 import { detectPageExtension, writeSinglePage } from '../writePage.util'
 import { ensureDir } from '../../directory.util'
 import { mangaone_fetchAndExtractPageList } from './extractor/extractChapter'
 import { mangaone_fetchAndDecryptPage } from './extractor/decryptPage'
+import { validateConfigSchema } from '../pluginConfig.util'
 
 export const mangaone_downloadChapter: DownloadChapterFunction = async (
   url,
@@ -19,7 +18,7 @@ export const mangaone_downloadChapter: DownloadChapterFunction = async (
 ) => {
   // Q. Do we need to verify config everytime? Seems like just at the app start up would be enough
   // A. Yes, we do. Otherwise, how would we check if it's before or after user provided the config.
-  validateConfigFields<MangaOneConfig>(configData, mangaone_configFields)
+  validateConfigSchema(configData, MangaOneConfigSchema)
   const chapterUrlValidationResult = mangaone_validateChapterUrl(url)
   if (chapterUrlValidationResult.isValid == false) {
     throw new InvalidChapterUrlError({
@@ -67,8 +66,4 @@ export const mangaone_downloadChapter: DownloadChapterFunction = async (
       await setTimeout(sleepTime * 1000)
     }
   }
-  // Mock: Create a folder for the manga
-  // const mangaTitle = 'MockMangaTitle'
-  // const chapterTitle = 'Chapter_2'
-  // const fullDir = path.join(savePath, mangaTitle, chapterTitle)
 }

@@ -1,17 +1,15 @@
 import { AESDecryptParams } from '../../../../types/common/decrypt'
-import {
-  MangaOneChapterQuery,
-  MangaOneAuthenticationData
-} from '../../../../types/plugins/mangaone'
 import { ExtractionFailedError } from '../../../errors'
-import { cleanAndSanitize, mangaCharacterRegex } from '../../japaneseChar.util'
+import { mangaCharacterRegex, stripProtobufArtifactsAndClean } from '../../japaneseChar.util'
+import { MangaOneAuthenticationData } from '../configFields'
+// import { writeFileSync } from 'node:fs'
 
 /**
  * @param param0 - query for chapter
  * @param param1 - authentication data to access the chapter
  */
 export async function mangaone_fetchAndExtractPageList(
-  { title_id, chapter_id }: MangaOneChapterQuery,
+  { title_id, chapter_id }: { title_id: string; chapter_id: string },
   { api_session, manga_one_session }: MangaOneAuthenticationData
 ): Promise<{
   urls: string[]
@@ -37,7 +35,7 @@ export async function mangaone_fetchAndExtractPageList(
         'sec-fetch-dest': 'empty',
         'sec-fetch-mode': 'cors',
         'sec-fetch-site': 'same-origin',
-        cookie: `api_session=${api_session}; is_logged_in=true; is_app_connected=true; manga_one_session=${manga_one_session}`,
+        cookie: `${api_session ? `api_session=${api_session}; ` : ''}${manga_one_session ? `manga_one_session=${manga_one_session}; ` : ''}is_logged_in=true; is_app_connected=true;`,
         Referer: `https://manga-one.com/manga/${title_id}/chapter/${chapter_id}?type=chapter&sort_type=desc&page=1&limit=10`
       },
       body: null,
@@ -57,8 +55,8 @@ export async function mangaone_fetchAndExtractPageList(
   const decoder = new TextDecoder('utf-8')
   const rawText = decoder.decode(buffer)
   // Save the exact raw text to a file
-  // writeFileSync('manga_dump.txt', rawText, 'utf8');
-  // console.log("✅ Saved raw API response to manga_dump.txt");
+  // writeFileSync(`manga_dump_${title_id}-${chapter_id}.txt`, rawText, 'utf8')
+  // console.log('✅ Saved raw API response to manga_dump.txt')
 
   const dynamicRegex = new RegExp(
     `https:\\/\\/app\\.manga-one\\.com\\/[^"'\\s\\x00-\\x1F]*?\\/manga_page_low\\/${chapter_id}\\/[^"'\\s\\x00-\\x1F]*`,
@@ -66,7 +64,7 @@ export async function mangaone_fetchAndExtractPageList(
   )
   const urls = rawText.match(dynamicRegex) || []
   console.log(`Found ${urls.length} pages:`)
-  console.log(urls)
+  // console.log(urls)
 
   const keyMatch = rawText.match(/[a-f0-9]{64}/)
   if (!keyMatch) {
@@ -93,11 +91,12 @@ export async function mangaone_fetchAndExtractPageList(
     })
   }
   const textBlocks = textMatchedBlocks.map((block) => block.trim()).filter((block) => block !== '')
+  // console.log(JSON.stringify(textBlocks))
   const ivBlockIndex = textBlocks.findIndex((block) => block === hexIv)
   let mangaTitle: string | undefined = undefined
   if (ivBlockIndex !== -1) {
     // The manga title is most likely the very next text block after the IV
-    mangaTitle = textBlocks[ivBlockIndex + 1]
+    mangaTitle = stripProtobufArtifactsAndClean(textBlocks[ivBlockIndex + 1])
     console.log('📖 Manga Title:', mangaTitle)
   }
 
@@ -112,15 +111,15 @@ export async function mangaone_fetchAndExtractPageList(
   let cleanTitle: string | undefined = undefined,
     cleanNumber: string | undefined = undefined
   if (urlBlockIndex !== -1) {
-    let rawChapterTitle = textBlocks[urlBlockIndex - 1]
     let rawChapterNumber = textBlocks[urlBlockIndex - 2]
+    let rawChapterTitle = textBlocks[urlBlockIndex - 1]
 
     // (Optional) Maybe I will remove it later
-    cleanTitle = cleanAndSanitize(rawChapterTitle)
-    cleanNumber = cleanAndSanitize(rawChapterNumber)
+    cleanNumber = stripProtobufArtifactsAndClean(rawChapterNumber)
+    cleanTitle = stripProtobufArtifactsAndClean(rawChapterTitle)
 
-    console.log('🔖 Chapter Number:', cleanNumber)
-    console.log('📝 Chapter Title:', cleanTitle)
+    console.log('🔖 Chapter Number:', cleanNumber, rawChapterNumber)
+    console.log('📝 Chapter Title:', cleanTitle, rawChapterTitle)
   }
 
   return {
