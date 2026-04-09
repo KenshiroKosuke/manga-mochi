@@ -1,6 +1,10 @@
-out
-dist
-pnpm-lock.yaml
-LICENSE.md
-tsconfig.json
-tsconfig.*.json
+# Ignore everything in the project root
+/*
+# But do not ignore the src folder
+!/src
+# out
+# dist
+# pnpm-lock.yaml
+# LICENSE.md
+# tsconfig.json
+# tsconfig.*.json
