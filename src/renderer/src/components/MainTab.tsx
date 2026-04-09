@@ -60,7 +60,7 @@ export default function MainTab({
 
   const handleStart = async (): Promise<void> => {
     if (!url) return
-    setStatus({ type: 'loading', msg: 'Checking URL...' })
+    setStatus({ type: 'loading', msg: 'Downloading...' })
     try {
       const result = await window.backendAPI.startDownload(url)
       console.log(JSON.stringify(result))
@@ -78,9 +78,12 @@ export default function MainTab({
             type: 'error',
             msg: `${code} ${error.message} Hint: ${error.hint}`
           })
-        } else if (
-          error.errorCode === 'INVALID_CONFIG_ERROR'
-        ){
+        } else if (error.errorCode === 'INVALID_CONFIG_ERROR') {
+          setStatus({
+            type: 'error',
+            msg: `${code} ${error.message}`
+          })
+        } else if (error.errorCode === 'EXTRACTION_FAILED_ERROR') {
           setStatus({
             type: 'error',
             msg: `${code} ${error.message}`

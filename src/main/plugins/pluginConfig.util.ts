@@ -5,9 +5,9 @@ import { InvalidConfigError } from '../errors'
 /**
  * Transforms an exhaustive UI object map into the array required by the frontend.
  */
-export function buildConfigArray<T extends Record<string, any>>(
-  uiMap: { [K in keyof T]: Omit<UIConfigField, 'fieldName'> }
-): UIConfigField[] {
+export function buildConfigArray<T extends Record<string, any>>(uiMap: {
+  [K in keyof T]: Omit<UIConfigField, 'fieldName'>
+}): UIConfigField[] {
   return Object.entries(uiMap).map(([key, value]) => ({
     fieldName: key,
     ...(value as Omit<UIConfigField, 'fieldName'>)
@@ -21,7 +21,6 @@ export function validateConfigSchema<T extends v.BaseSchema<any, any, v.BaseIssu
   configData: unknown,
   schema: T
 ): asserts configData is v.InferInput<T> {
-  
   if (!configData || typeof configData !== 'object') {
     throw new InvalidConfigError({
       configs: [{ name: 'config', value: null, error: 'Missing config object entirely.' }]
@@ -35,8 +34,8 @@ export function validateConfigSchema<T extends v.BaseSchema<any, any, v.BaseIssu
     // Map Valibot's precise issues into your frontend's expected format
     const errors = result.issues.map((issue) => {
       // Find the name of the field that failed (e.g., 'api_session')
-      const fieldName = issue.path?.[0]?.key as string || 'unknown_field'
-      
+      const fieldName = (issue.path?.[0]?.key as string) || 'unknown_field'
+
       return {
         name: fieldName,
         value: issue.input,
@@ -47,4 +46,3 @@ export function validateConfigSchema<T extends v.BaseSchema<any, any, v.BaseIssu
     throw new InvalidConfigError({ configs: errors })
   }
 }
-

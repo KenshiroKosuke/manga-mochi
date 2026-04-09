@@ -1,8 +1,21 @@
 import { AESDecryptParams } from '../../../../types/common/decrypt'
-import { ExtractionFailedError } from '../../../errors'
-import { mangaCharacterRegex, stripProtobufArtifactsAndClean } from '../../japaneseChar.util'
+import { ExtractionFailedError, NoPageError } from '../../../errors'
 import { MangaOneAuthenticationData } from '../configFields'
 // import { writeFileSync } from 'node:fs'
+const RawProto = require('rawproto').default || require('rawproto')
+
+const PROTO_MAP = {
+  chapter_page_list: '1.1.1:string',
+  hex_key: '3:string',
+  hex_iv: '4:string',
+  manga_id: '5.1.1:string',
+  manga_name: '5.1.2:string',
+  manga_description: '5.1.4:string',
+  manga_author_raw: '5.1.5:string',
+  chapter_id: '7.1:string',
+  chapter_number: '7.2:string',
+  chapter_title: '7.3:string'
+} as const
 
 /**
  * @param param0 - query for chapter
@@ -10,7 +23,7 @@ import { MangaOneAuthenticationData } from '../configFields'
  */
 export async function mangaone_fetchAndExtractPageList(
   { title_id, chapter_id }: { title_id: string; chapter_id: string },
-  { api_session, manga_one_session }: MangaOneAuthenticationData
+  authData: MangaOneAuthenticationData
 ): Promise<{
   urls: string[]
   decryptData: AESDecryptParams
@@ -18,6 +31,62 @@ export async function mangaone_fetchAndExtractPageList(
   chapterName: string | undefined
   chapterNumber: string | undefined
 }> {
+  const buffer = new Uint8Array(await getRawResponse({ title_id, chapter_id }, authData))
+  const proto = new RawProto(buffer)
+  const hexKey: string | undefined = proto.query(PROTO_MAP.hex_key)[0]
+  if (!hexKey || !hexKey.match(/[a-f0-9]{64}/)) {
+    throw new ExtractionFailedError({ plugin: 'MangaOne', reason: 'Missing Encryption Key' })
+  }
+  const hexIv: string | undefined = proto.query(PROTO_MAP.hex_iv)[0]
+  if (!hexIv || !hexIv.match(/[a-f0-9]{32}/)) {
+    throw new ExtractionFailedError({ plugin: 'MangaOne', reason: 'Missing IV' })
+  }
+  const urls: string[] = proto.query(PROTO_MAP.chapter_page_list) ?? []
+  const pageRegex = new RegExp(
+    `https:\\/\\/app\\.manga-one\\.com\\/[^"'\\s\\x00-\\x1F]*?\\/manga_page_low\\/${chapter_id}\\/[^"'\\s\\x00-\\x1F]*`,
+    'g'
+  )
+  if (urls.some((url) => !url.match(pageRegex))) {
+    throw new ExtractionFailedError({ plugin: 'MangaOne', reason: 'Invalid Page List' })
+  }
+  if (urls.length == 0) {
+    throw new NoPageError({ hint: 'Recheck if your api session is still valid.' })
+  }
+  console.log(`Found ${urls.length} pages:`)
+  const mangaId: string | undefined = proto.query(PROTO_MAP.manga_id)[0]
+  if (mangaId !== title_id) {
+    throw new ExtractionFailedError({
+      plugin: 'MangaOne',
+      reason: `Mismatched Manga ID: expect (${title_id}), receive (${mangaId})`
+    })
+  }
+  const chapterId: string | undefined = proto.query(PROTO_MAP.chapter_id)[0]
+  if (chapterId !== chapter_id) {
+    throw new ExtractionFailedError({
+      plugin: 'MangaOne',
+      reason: `Mismatched Chapter ID: expect (${chapter_id}), receive (${chapterId})`
+    })
+  }
+  // console.log(proto.query("7:string"));
+  const mangaTitle: string | undefined = proto.query(PROTO_MAP.manga_name)[0]
+  const chapterNumber: string | undefined = proto.query(PROTO_MAP.chapter_number)[0]
+  const chapterTitle: string | undefined = proto.query(PROTO_MAP.chapter_title)[0]
+
+  const result = {
+    urls,
+    decryptData: { hexKey: hexKey, hexIv: hexIv },
+    mangaName: mangaTitle,
+    chapterName: chapterTitle,
+    chapterNumber: chapterNumber
+  }
+  console.log(result)
+  return result
+}
+
+async function getRawResponse(
+  { title_id, chapter_id }: { title_id: string; chapter_id: string },
+  { api_session, manga_one_session }: MangaOneAuthenticationData
+) {
   // You can change these headers to whatever. I just grab them from my browser.
   // If you get error fetching this endpoint, try opening mangaone in browser, look in DevTool and see the if there are any differences here and there.
   const result = await fetch(
@@ -52,81 +121,7 @@ export async function mangaone_fetchAndExtractPageList(
   }
 
   const buffer = await result.arrayBuffer()
-  const decoder = new TextDecoder('utf-8')
-  const rawText = decoder.decode(buffer)
-  // Save the exact raw text to a file
-  // writeFileSync(`manga_dump_${title_id}-${chapter_id}.txt`, rawText, 'utf8')
-  // console.log('✅ Saved raw API response to manga_dump.txt')
-
-  const dynamicRegex = new RegExp(
-    `https:\\/\\/app\\.manga-one\\.com\\/[^"'\\s\\x00-\\x1F]*?\\/manga_page_low\\/${chapter_id}\\/[^"'\\s\\x00-\\x1F]*`,
-    'g'
-  )
-  const urls = rawText.match(dynamicRegex) || []
-  console.log(`Found ${urls.length} pages:`)
-  // console.log(urls)
-
-  const keyMatch = rawText.match(/[a-f0-9]{64}/)
-  if (!keyMatch) {
-    throw new ExtractionFailedError({ plugin: 'MangaOne', reason: 'Missing Encryption Key' })
-  }
-  const hexKey = keyMatch[0]
-
-  const textWithoutKey = rawText.replace(hexKey, '')
-  const ivMatch = textWithoutKey.match(/[a-f0-9]{32}/)
-  if (!ivMatch) {
-    throw new ExtractionFailedError({ plugin: 'MangaOne', reason: 'Missing IV' })
-  }
-  const hexIv = ivMatch[0]
-
-  // ==========================================
-  // Extract Manga Title
-  // ==========================================
-  // Find the block that IS exactly our IV
-  const textMatchedBlocks = rawText.match(mangaCharacterRegex)
-  if (!textMatchedBlocks) {
-    throw new ExtractionFailedError({
-      plugin: 'MangaOne',
-      reason: 'Cannot parse Japanese text blocks'
-    })
-  }
-  const textBlocks = textMatchedBlocks.map((block) => block.trim()).filter((block) => block !== '')
-  // console.log(JSON.stringify(textBlocks))
-  const ivBlockIndex = textBlocks.findIndex((block) => block === hexIv)
-  let mangaTitle: string | undefined = undefined
-  if (ivBlockIndex !== -1) {
-    // The manga title is most likely the very next text block after the IV
-    mangaTitle = stripProtobufArtifactsAndClean(textBlocks[ivBlockIndex + 1])
-    console.log('📖 Manga Title:', mangaTitle)
-  }
-
-  // ==========================================
-  // Extract Chapter Number & Title
-  // ==========================================
-  // Find the block that contains our specific chapter thumbnail URL
-  const targetThumbUrl = `/chapter/${chapter_id}.webp`
-
-  // Find the block containing the thumbnail URL
-  const urlBlockIndex = textBlocks.findIndex((block) => block.includes(targetThumbUrl))
-  let cleanTitle: string | undefined = undefined,
-    cleanNumber: string | undefined = undefined
-  if (urlBlockIndex !== -1) {
-    let rawChapterNumber = textBlocks[urlBlockIndex - 2]
-    let rawChapterTitle = textBlocks[urlBlockIndex - 1]
-
-    // (Optional) Maybe I will remove it later
-    cleanNumber = stripProtobufArtifactsAndClean(rawChapterNumber)
-    cleanTitle = stripProtobufArtifactsAndClean(rawChapterTitle)
-
-    console.log('🔖 Chapter Number:', cleanNumber, rawChapterNumber)
-    console.log('📝 Chapter Title:', cleanTitle, rawChapterTitle)
-  }
-
-  return {
-    urls,
-    decryptData: { hexKey: hexKey, hexIv: hexIv },
-    mangaName: mangaTitle,
-    chapterName: cleanTitle,
-    chapterNumber: cleanNumber
-  }
+  // const decoder = new TextDecoder('utf-8')
+  // return decoder.decode(buffer)
+  return buffer
 }

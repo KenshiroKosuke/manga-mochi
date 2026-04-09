@@ -41,8 +41,8 @@ export const mangaone_downloadChapter: DownloadChapterFunction = async (
   const fullDir = path.join(
     savePath,
     mangaName ?? chapterUrlValidationResult.mangaId,
-    chapterNumber && chapterName
-      ? chapterNumber + ' ' + chapterName
+    chapterNumber || chapterName
+      ? ((chapterNumber ?? '') + ' ' + (chapterName ?? '')).trim()
       : chapterUrlValidationResult.chapterId
   )
   console.log(`[mangaone_downloadChapter] Prepare writing file to ${fullDir} ...`)

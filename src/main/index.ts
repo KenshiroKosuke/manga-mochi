@@ -115,7 +115,9 @@ app.whenReady().then(async () => {
 
     // Run the plugin logic
     await matchedPlugin.downloadChapter(url, downloadDir, namingSchema, siteConfig)
-    return `Download successful via ${matchedPlugin.id}`
+    const log = `Download successful via ${matchedPlugin.id}`
+    console.log(log)
+    return log
   })
 
   createWindow()

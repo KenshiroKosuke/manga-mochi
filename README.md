@@ -8,12 +8,12 @@ If you need any manga site to be supported, please open an issue.
 
 |      | version |
 | :--: | :-----: |
-| node |  >=20  |
+| node |  >=20   |
 
 ## Usage
 
 ```bash
-$ npm install 
+$ npm install
 ```
 
 Then
@@ -29,14 +29,14 @@ $  node main.mjs <<url>>
 ## Support Sites
 
 | Mangaone | [https://manga-one.com/](https://manga-one.com/) |
-| -------- | --------------------------------------------- |
+| -------- | ------------------------------------------------ |
 
-* Mangaone: in-memory page + encrypted AES
-* ichicomi: normal fetch + gigaviewer scramble (transpose)
-* takecomic:
-  * fetch img url + scramble pattern (e.g. https://takecomic.jp/api/book/contentsInfo?user-id=&comici-viewer-id=905058365062c19d2b51e19c88b915ca&page-from=0&page-to=1) -> require cookies/auth header ?
-  * there's also seriesHash (e.g. https://takecomic.jp/series/3f846451aff2d?_rsc=ma6q5) not sure if relevant
-  * 
+- Mangaone: in-memory page + encrypted AES
+- ichicomi: normal fetch + gigaviewer scramble (transpose)
+- takecomic:
+  - fetch img url + scramble pattern (e.g. https://takecomic.jp/api/book/contentsInfo?user-id=&comici-viewer-id=905058365062c19d2b51e19c88b915ca&page-from=0&page-to=1) -> require cookies/auth header ?
+  - there's also seriesHash (e.g. https://takecomic.jp/series/3f846451aff2d?_rsc=ma6q5) not sure if relevant
+  -
 
 ## Contribute
 
