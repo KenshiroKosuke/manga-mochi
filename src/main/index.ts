@@ -5,9 +5,9 @@ import icon from '../../resources/icon.png?asset'
 import { loadConfig, saveConfig } from './appConfig'
 import { loadPlugins } from './loadPlugins'
 import { ipcMainRegisterHandler } from './responseWrapper'
-import { NoMatchingPluginError } from './errors'
+import { DownloadQueueManager } from './manager/downloadQueueManager'
 
-function createWindow(): void {
+function createWindow(): BrowserWindow {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 900,
@@ -23,7 +23,7 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => {
     console.log('ready-to-show')
-    mainWindow.show()
+    mainWindow!.show()
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -40,6 +40,8 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  return mainWindow
 }
 
 // This method will be called when Electron has finished
@@ -49,10 +51,14 @@ app.whenReady().then(async () => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
-  // ... create window code ...
-
   const plugins = await loadPlugins()
   let currentConfig = await loadConfig()
+  const mainWindow = createWindow()
+  const queueManager = new DownloadQueueManager(
+    mainWindow.webContents,
+    plugins,
+    () => currentConfig
+  )
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
@@ -73,7 +79,8 @@ app.whenReady().then(async () => {
         checkUrl: undefined,
         download: undefined,
         validateChapterUrl: undefined,
-        downloadChapter: undefined
+        downloadChapter: undefined,
+        getChapterMetaData: undefined
       }))
     }
     return appData
@@ -96,36 +103,54 @@ app.whenReady().then(async () => {
 
   // 4. Perform Download Logic
   ipcMainRegisterHandler(ipcMain, 'start-download', async (_, url) => {
-    console.log(`[start-download] Find correct plugin from ${plugins.length} plugin(s)`)
-    const matchedPlugin = plugins.find((plugin) => {
-      console.log(plugin.id)
-      return plugin.validateChapterUrl(url).isValid
+    queueManager.addTask({
+      id: url,
+      title: 'Fetching...', // placeholder
+      url: url
     })
+    return 'Added to queue'
 
-    if (!matchedPlugin) {
-      throw new NoMatchingPluginError({
-        url: url
-      })
-    }
+    // console.log(`[start-download] Find correct plugin from ${plugins.length} plugin(s)`)
+    // const matchedPlugin = plugins.find((plugin) => {
+    //   console.log(plugin.id)
+    //   return plugin.validateChapterUrl(url).isValid
+    // })
 
-    const siteConfig = currentConfig.sites[matchedPlugin.id]
-    const { downloadDir, namingSchema } = currentConfig.global
+    // if (!matchedPlugin) {
+    //   throw new NoMatchingPluginError({
+    //     url: url
+    //   })
+    // }
 
-    if (!downloadDir) throw new Error('Download directory not set.')
+    // const siteConfig = currentConfig.sites[matchedPlugin.id]
+    // const { downloadDir, namingSchema } = currentConfig.global
 
-    // Run the plugin logic
-    await matchedPlugin.downloadChapter(url, downloadDir, namingSchema, siteConfig)
-    const log = `Download successful via ${matchedPlugin.id}`
-    console.log(log)
-    return log
+    // if (!downloadDir) throw new Error('Download directory not set.')
+
+    // // Run the plugin logic
+    // await matchedPlugin.downloadChapter(url, downloadDir, namingSchema, siteConfig)
+    // const log = `Download successful via ${matchedPlugin.id}`
+    // console.log(log)
+    // return log
   })
 
-  createWindow()
+  ipcMainRegisterHandler(ipcMain, 'cancel-download', async (_, id) => {
+    queueManager.cancelTask(id)
+    return true
+  })
+
+  ipcMainRegisterHandler(ipcMain, 'cancel-all-downloads', async () => {
+    queueManager.cancelAll()
+    return true
+  })
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    if (BrowserWindow.getAllWindows().length === 0) {
+      const newWindow = createWindow()
+      queueManager.updateWebContents(newWindow.webContents)
+    }
   })
 })
 

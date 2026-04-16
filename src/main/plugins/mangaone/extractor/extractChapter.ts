@@ -1,5 +1,5 @@
 import { AESDecryptParams } from '../../../../types/common/decrypt'
-import { ExtractionFailedError, NoPageError } from '../../../errors'
+import { ExtractionFailedError } from '../../../errors'
 import { MangaOneAuthenticationData } from '../configFields'
 // import { writeFileSync } from 'node:fs'
 const RawProto = require('rawproto').default || require('rawproto')
@@ -48,9 +48,6 @@ export async function mangaone_fetchAndExtractPageList(
   )
   if (urls.some((url) => !url.match(pageRegex))) {
     throw new ExtractionFailedError({ plugin: 'MangaOne', reason: 'Invalid Page List' })
-  }
-  if (urls.length == 0) {
-    throw new NoPageError({ hint: 'Recheck if your api session is still valid.' })
   }
   console.log(`Found ${urls.length} pages:`)
   const mangaId: string | undefined = proto.query(PROTO_MAP.manga_id)[0]

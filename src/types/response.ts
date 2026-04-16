@@ -5,6 +5,7 @@ export type IpcMainErrorDataMap = {
   INVALID_CONFIG_ERROR: { configs: { name: string; value: any; error: any }[] }
   NO_PAGE_ERROR: { hint: string }
   EXTRACTION_FAILED_ERROR: { plugin: string; reason: string }
+  DOWNLOAD_CANCELLED: undefined
 }
 
 // Union type for convenience

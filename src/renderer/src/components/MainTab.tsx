@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { AppConfig } from 'src/types/appConfig'
 import { MangaPlugin } from 'src/types/plugin'
+import DownloadQueue from './DownloadQueue'
 
 export default function MainTab({
   config,
@@ -58,51 +59,68 @@ export default function MainTab({
     }
   }
 
+  // Fire and Forget!
   const handleStart = async (): Promise<void> => {
     if (!url) return
-    setStatus({ type: 'loading', msg: 'Downloading...' })
+
     try {
-      const result = await window.backendAPI.startDownload(url)
-      console.log(JSON.stringify(result))
-      if (result.success) {
-        setStatus({ type: 'success', msg: result.data })
-        // Optional: Reset URL after successful download
-        // setUrl(''); setMatchedPlugin(null);
-      } else {
-        const error = result.error
-        let code = `[${result.error.errorCode}]`
-        if (error.errorCode === 'INVALID_CHAPTER_URL_ERROR') {
-          setStatus({ type: 'error', msg: `${code} ${error.message}` })
-        } else if (error.errorCode === 'NO_PAGE_ERROR') {
-          setStatus({
-            type: 'error',
-            msg: `${code} ${error.message} Hint: ${error.hint}`
-          })
-        } else if (error.errorCode === 'INVALID_CONFIG_ERROR') {
-          setStatus({
-            type: 'error',
-            msg: `${code} ${error.message}`
-          })
-        } else if (error.errorCode === 'EXTRACTION_FAILED_ERROR') {
-          setStatus({
-            type: 'error',
-            msg: `${code} ${error.message}`
-          })
-        } else {
-          setStatus({
-            type: 'error',
-            msg: `[UnknownError] ${JSON.stringify(error)}`
-          })
-        }
-      }
-    } catch (error: unknown) {
-      let message = 'Error occurred'
-      if (error instanceof Error) {
-        message = error.message
-      }
-      setStatus({ type: 'error', msg: message })
+      // Send it to the main process queue
+      await window.backendAPI.startDownload(url)
+
+      // Instantly reset the UI so the user can paste another link!
+      setUrl('')
+      setMatchedPlugin(null)
+      setStatus({ type: 'idle', msg: '' })
+    } catch (error: any) {
+      setStatus({ type: 'error', msg: error.message || 'Failed to add to queue' })
     }
   }
+
+  // const handleStart = async (): Promise<void> => {
+  //   if (!url) return
+  //   setStatus({ type: 'loading', msg: 'Downloading...' })
+  //   try {
+  //     const result = await window.backendAPI.startDownload(url)
+  //     console.log(JSON.stringify(result))
+  //     if (result.success) {
+  //       setStatus({ type: 'success', msg: result.data })
+  //       // Optional: Reset URL after successful download
+  //       // setUrl(''); setMatchedPlugin(null);
+  //     } else {
+  //       const error = result.error
+  //       let code = `[${result.error.errorCode}]`
+  //       if (error.errorCode === 'INVALID_CHAPTER_URL_ERROR') {
+  //         setStatus({ type: 'error', msg: `${code} ${error.message}` })
+  //       } else if (error.errorCode === 'NO_PAGE_ERROR') {
+  //         setStatus({
+  //           type: 'error',
+  //           msg: `${code} ${error.message} Hint: ${error.hint}`
+  //         })
+  //       } else if (error.errorCode === 'INVALID_CONFIG_ERROR') {
+  //         setStatus({
+  //           type: 'error',
+  //           msg: `${code} ${error.message}`
+  //         })
+  //       } else if (error.errorCode === 'EXTRACTION_FAILED_ERROR') {
+  //         setStatus({
+  //           type: 'error',
+  //           msg: `${code} ${error.message}`
+  //         })
+  //       } else {
+  //         setStatus({
+  //           type: 'error',
+  //           msg: `[UnknownError] ${JSON.stringify(error)}`
+  //         })
+  //       }
+  //     }
+  //   } catch (error: unknown) {
+  //     let message = 'Error occurred'
+  //     if (error instanceof Error) {
+  //       message = error.message
+  //     }
+  //     setStatus({ type: 'error', msg: message })
+  //   }
+  // }
 
   return (
     <>
@@ -150,6 +168,8 @@ export default function MainTab({
           {status.msg}
         </div>
       )}
+
+      <DownloadQueue />
 
       <div className="config-footer">
         <div className="footer-info">

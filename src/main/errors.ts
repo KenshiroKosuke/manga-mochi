@@ -53,3 +53,10 @@ export class ExtractionFailedError extends MainResponseError {
     super(`Failed to extract data from ${data.plugin} response: ${data.reason}`, data)
   }
 }
+
+export class DownloadCancelledError extends MainResponseError {
+  readonly errorCode = 'DOWNLOAD_CANCELLED'
+  constructor() {
+    super('The download was cancelled by the user.')
+  }
+}

@@ -29,9 +29,26 @@ export type DownloadChapterFunction = (
   url: string,
   savePath: string,
   namingSchema: string,
-  configData: unknown // After main process used validateChapterUrl to find the correct plugin.
+  // After main process used validateChapterUrl to find the correct plugin.
   // Could be `undefined` if the config is missing from .mangamochi entirely
+  configData: unknown,
+  onProgress: (current: number, total: number) => void,
+  abortSignal: AbortSignal
 ) => Promise<void>
+
+export type ChapterMetaData = {
+  mangaName: string | undefined
+  chapterId: string
+  chapterNumber: string | undefined
+  chapterName: string | undefined
+  chapterDisplayName: string
+  pageCount: number
+}
+
+export type GetChapterMetaDataFunction = (
+  url: string,
+  configData: unknown
+) => Promise<ChapterMetaData>
 
 // The shape every website plugin must follow
 export interface MangaPlugin {
@@ -55,4 +72,8 @@ export interface MangaPlugin {
    * Download method
    */
   downloadChapter: DownloadChapterFunction
+  /**
+   * Get meta info method
+   */
+  getChapterMetaData: GetChapterMetaDataFunction
 }

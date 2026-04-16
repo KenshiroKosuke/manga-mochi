@@ -1,6 +1,6 @@
 import { MangaPlugin } from '../../../types/plugin'
 import { mangaone_configFields } from './configFields'
-import { mangaone_downloadChapter } from './downloader'
+import { mangaone_downloadChapter, mangaone_getChapterMetaData } from './downloader'
 import { mangaone_chapterRegexList, mangaone_validateChapterUrl } from './urlValidator'
 
 const plugin: MangaPlugin = {
@@ -9,7 +9,8 @@ const plugin: MangaPlugin = {
   uiConfigFields: mangaone_configFields,
   chapterRegexList: mangaone_chapterRegexList,
   validateChapterUrl: mangaone_validateChapterUrl,
-  downloadChapter: mangaone_downloadChapter
+  downloadChapter: mangaone_downloadChapter,
+  getChapterMetaData: mangaone_getChapterMetaData
 }
 
 export default plugin

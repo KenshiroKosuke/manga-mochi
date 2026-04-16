@@ -26,4 +26,10 @@ export interface BackendAPI {
     | IpcMainErrorResponse['INVALID_CONFIG_ERROR']
     | IpcMainErrorResponse['EXTRACTION_FAILED_ERROR']
   >
+  cancelDownload: (id: string) => SafeResultPromise<true>
+  cancelAllDownloads: () => SafeResultPromise<true>
+  onQueueUpdated: (callback: (queue: any[]) => void) => () => Electron.IpcRenderer
+  onQueueProgress: (
+    callback: (data: { id: string; progress: number }) => void
+  ) => () => Electron.IpcRenderer
 }

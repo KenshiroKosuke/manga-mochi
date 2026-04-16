@@ -1,7 +1,7 @@
 import path from 'node:path'
 import { setTimeout } from 'timers/promises'
-import { DownloadChapterFunction } from '../../../types/plugin'
-import { InvalidChapterUrlError } from '../../errors'
+import { DownloadChapterFunction, GetChapterMetaDataFunction } from '../../../types/plugin'
+import { DownloadCancelledError, InvalidChapterUrlError, NoPageError } from '../../errors'
 import { MangaOneConfigSchema } from './configFields'
 import { mangaone_validateChapterUrl } from './urlValidator'
 import { detectPageExtension, writeSinglePage } from '../writePage.util'
@@ -9,12 +9,55 @@ import { ensureDir } from '../../directory.util'
 import { mangaone_fetchAndExtractPageList } from './extractor/extractChapter'
 import { mangaone_fetchAndDecryptPage } from './extractor/decryptPage'
 import { validateConfigSchema } from '../pluginConfig.util'
+import { formatChapterDisplayName } from '../formatName.util'
+
+// TODO:
+// - use path to netscape cookies text file directly?
+// - only use site config for non-credential config
+
+export const mangaone_getChapterMetaData: GetChapterMetaDataFunction = async (url, configData) => {
+  validateConfigSchema(configData, MangaOneConfigSchema)
+  const chapterUrlValidationResult = mangaone_validateChapterUrl(url)
+  if (chapterUrlValidationResult.isValid == false) {
+    throw new InvalidChapterUrlError({
+      url: url
+    })
+  }
+
+  const chapterId = chapterUrlValidationResult.chapterId
+
+  const { urls, chapterName, chapterNumber, mangaName } = await mangaone_fetchAndExtractPageList(
+    {
+      title_id: chapterUrlValidationResult.mangaId,
+      chapter_id: chapterId
+    },
+    {
+      api_session: configData.api_session,
+      manga_one_session: configData.manga_one_session
+    }
+  )
+
+  return {
+    chapterId,
+    chapterName,
+    chapterNumber,
+    mangaName,
+    pageCount: urls.length,
+    chapterDisplayName: formatChapterDisplayName({
+      chapterId,
+      chapterNumber,
+      chapterName
+    })
+  }
+}
 
 export const mangaone_downloadChapter: DownloadChapterFunction = async (
   url,
   savePath,
   namingSchema,
-  configData
+  configData,
+  onProgress,
+  abortSignal
 ) => {
   // Q. Do we need to verify config everytime? Seems like just at the app start up would be enough
   // A. Yes, we do. Otherwise, how would we check if it's before or after user provided the config.
@@ -38,6 +81,10 @@ export const mangaone_downloadChapter: DownloadChapterFunction = async (
       }
     )
 
+  if (urls.length == 0) {
+    throw new NoPageError({ hint: 'Recheck if your api session is still valid.' })
+  }
+
   const fullDir = path.join(
     savePath,
     mangaName ?? chapterUrlValidationResult.mangaId,
@@ -49,6 +96,10 @@ export const mangaone_downloadChapter: DownloadChapterFunction = async (
   await ensureDir(fullDir)
   const pageLength = urls.length
   for (let pageNumber = 1; pageNumber <= pageLength; pageNumber++) {
+    // Check for cancellation BEFORE starting the next page
+    if (abortSignal.aborted) {
+      throw new DownloadCancelledError()
+    }
     const url = urls[pageNumber - 1]
     const bufferData = await mangaone_fetchAndDecryptPage(url, decryptData)
     const detectedExtension = detectPageExtension(bufferData, '.webp')
@@ -59,6 +110,9 @@ export const mangaone_downloadChapter: DownloadChapterFunction = async (
       pageData: bufferData,
       pageNumber: pageNumber
     })
+
+    // Report Progress back to the queue manager
+    onProgress(pageNumber, pageLength)
 
     if (pageNumber !== pageLength) {
       const sleepTime = 0.5
