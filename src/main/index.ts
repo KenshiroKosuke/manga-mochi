@@ -105,7 +105,7 @@ app.whenReady().then(async () => {
   ipcMainRegisterHandler(ipcMain, 'start-download', async (_, url) => {
     queueManager.addTask({
       id: url,
-      title: 'Fetching...', // placeholder
+      // title: 'Fetching...', // placeholder
       url: url
     })
     return 'Added to queue'
@@ -141,6 +141,12 @@ app.whenReady().then(async () => {
 
   ipcMainRegisterHandler(ipcMain, 'cancel-all-downloads', async () => {
     queueManager.cancelAll()
+    return true
+  })
+
+  ipcMainRegisterHandler(ipcMain, 'open-folder', async (_, pathToOpen) => {
+    // shell.showItemInFolder highlights the folder/file in the OS explorer
+    shell.showItemInFolder(pathToOpen)
     return true
   })
 

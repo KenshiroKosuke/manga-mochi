@@ -88,9 +88,14 @@ export const mangaone_downloadChapter: DownloadChapterFunction = async (
   const fullDir = path.join(
     savePath,
     mangaName ?? chapterUrlValidationResult.mangaId,
-    chapterNumber || chapterName
-      ? ((chapterNumber ?? '') + ' ' + (chapterName ?? '')).trim()
-      : chapterUrlValidationResult.chapterId
+    // chapterNumber || chapterName
+    //   ? ((chapterNumber ?? '') + ' ' + (chapterName ?? '')).trim()
+    //   : chapterUrlValidationResult.chapterId
+    formatChapterDisplayName({
+      chapterId: chapterUrlValidationResult.chapterId,
+      chapterNumber,
+      chapterName
+    })
   )
   console.log(`[mangaone_downloadChapter] Prepare writing file to ${fullDir} ...`)
   await ensureDir(fullDir)
@@ -120,4 +125,5 @@ export const mangaone_downloadChapter: DownloadChapterFunction = async (
       await setTimeout(sleepTime * 1000)
     }
   }
+  return fullDir
 }

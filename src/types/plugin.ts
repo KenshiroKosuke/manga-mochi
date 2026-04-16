@@ -34,7 +34,7 @@ export type DownloadChapterFunction = (
   configData: unknown,
   onProgress: (current: number, total: number) => void,
   abortSignal: AbortSignal
-) => Promise<void>
+) => Promise<string>
 
 export type ChapterMetaData = {
   mangaName: string | undefined

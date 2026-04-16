@@ -9,6 +9,7 @@ abstract class MainResponseError extends Error {
     Object.setPrototypeOf(this, MainResponseError.prototype)
   }
 }
+MainResponseError.prototype.name = MainResponseError.name
 
 export class InvalidChapterUrlError extends MainResponseError {
   readonly errorCode = 'INVALID_CHAPTER_URL_ERROR'

@@ -27,7 +27,8 @@ const backendAPI: BackendAPI = {
     ipcRenderer.on('queue-progress', listener)
 
     return () => ipcRenderer.removeListener('queue-progress', listener)
-  }
+  },
+  openFolder: (path: string) => ipcRenderer.invoke('open-folder', path)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

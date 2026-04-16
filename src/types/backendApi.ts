@@ -32,4 +32,5 @@ export interface BackendAPI {
   onQueueProgress: (
     callback: (data: { id: string; progress: number }) => void
   ) => () => Electron.IpcRenderer
+  openFolder: (path: string) => SafeResultPromise<true>
 }

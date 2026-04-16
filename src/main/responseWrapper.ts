@@ -61,7 +61,7 @@ export function formatResponseError(error: unknown) {
     }
   }
   return {
-    name: 'Unknown Invoking Error',
+    name: 'UnknownError',
     message: 'Unknown error has occurred.'
   }
 }

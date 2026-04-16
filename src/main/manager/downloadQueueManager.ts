@@ -3,6 +3,7 @@ import { NoMatchingPluginError, DownloadCancelledError } from '../errors'
 import { AppConfig } from '../../types/appConfig'
 import { MangaPlugin } from '../../types/plugin'
 import { DownloadTask } from '../../types/downloadQueue'
+import { formatResponseError } from '../responseWrapper'
 
 export class DownloadQueueManager {
   private queue: DownloadTask[] = []
@@ -22,8 +23,17 @@ export class DownloadQueueManager {
     this.webContents.send('queue-updated', this.queue)
   }
 
-  public addTask(taskInfo: { id: string; title: string; url: string }) {
-    this.queue.push({ ...taskInfo, status: 'pending', progress: 0 })
+  public addTask(taskInfo: { id: string; url: string }) {
+    // If a task with this URL already exists (failed/cancelled/etc), wipe it out first.
+    this.queue = this.queue.filter((t) => t.id !== taskInfo.id)
+    // Then add to the queue
+    this.queue.push({
+      ...taskInfo,
+      mangaTitle: 'Fetching info...',
+      chapterTitle: '...',
+      status: 'pending',
+      progress: 0
+    })
     this.broadcastQueue()
     this.processNext()
   }
@@ -36,7 +46,7 @@ export class DownloadQueueManager {
 
     this.isProcessing = true
     nextTask.status = 'downloading'
-    this.broadcastQueue()
+    // this.broadcastQueue()
 
     this.activeController = new AbortController()
 
@@ -57,10 +67,14 @@ export class DownloadQueueManager {
 
       const siteConfig = config.sites[matchedPlugin.id]
       const metadata = await matchedPlugin.getChapterMetaData(nextTask.url, siteConfig)
-      nextTask.title = `「${metadata.mangaName}」${metadata.chapterDisplayName}`
+      // nextTask.title = `「${metadata.mangaName}」${metadata.chapterDisplayName}`
+      nextTask.pageCount = metadata.pageCount
+      nextTask.mangaTitle = metadata.mangaName ?? '-'
+      nextTask.chapterTitle = metadata.chapterDisplayName
+      this.broadcastQueue()
 
       // 2. Run the dynamic plugin logic
-      await matchedPlugin.downloadChapter(
+      const fullDir = await matchedPlugin.downloadChapter(
         nextTask.url,
         downloadDir,
         namingSchema,
@@ -74,13 +88,14 @@ export class DownloadQueueManager {
 
       nextTask.status = 'completed'
       nextTask.progress = 100
+      nextTask.savePath = fullDir
     } catch (error: any) {
       if (error instanceof DownloadCancelledError || error.errorCode === 'DOWNLOAD_CANCELLED') {
         nextTask.status = 'cancelled'
       } else {
         console.error(`Download failed for ${nextTask.url}:`, error)
         nextTask.status = 'failed'
-        nextTask.error = error
+        nextTask.error = formatResponseError(error)
       }
     } finally {
       this.activeController = null
