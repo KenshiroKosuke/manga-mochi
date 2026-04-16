@@ -1,7 +1,7 @@
 export type DownloadTask = {
   id: string
   // title: string
-  mangaTitle: string   // 🌟 Split into two columns
+  mangaTitle: string // 🌟 Split into two columns
   chapterTitle: string // 🌟 Split into two columns
   url: string
   pageCount?: number

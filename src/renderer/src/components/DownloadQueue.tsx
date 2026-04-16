@@ -352,8 +352,7 @@ export default function DownloadQueue(): React.JSX.Element | null {
                     <span style={{ color: 'var(--text-primary)' }}>{errorTask.chapterTitle}</span>
                   </div>
                   <div style={{ color: 'var(--text-secondary)' }}>
-                    Url:{' '}
-                    <span style={{ color: 'var(--text-primary)' }}>{errorTask.url}</span>
+                    Url: <span style={{ color: 'var(--text-primary)' }}>{errorTask.url}</span>
                   </div>
                 </div>
 
