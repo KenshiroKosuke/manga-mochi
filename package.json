@@ -5,7 +5,12 @@
   "main": "./out/main/index.js",
   "author": "KenshiroKosuke",
   "homepage": "https://github.com/KenshiroKosuke/manga-mochi",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=10"
+  },
   "scripts": {
+    "preinstall": "npx only-allow pnpm",
     "format": "prettier --write .",
     "lint": "eslint --cache .",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
