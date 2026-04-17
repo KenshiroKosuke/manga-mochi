@@ -55,7 +55,6 @@ export type GetChapterMetaDataFunction = (
 
 // The shape every website plugin must follow
 export interface MangaPlugin {
-  // name: string
   /**
    * Unique ID for internal tracking
    */
@@ -70,7 +69,7 @@ export interface MangaPlugin {
    * @param url
    * @returns validation result (mangaId might not be part of url)
    */
-  validateChapterUrl: ValidateChapterUrl<any>
+  validateChapterUrl: ValidateChapterUrl<boolean>
   /**
    * Download method
    */

@@ -2,6 +2,7 @@ import { AESDecryptParams } from '../../../../types/common/decrypt'
 import { ExtractionFailedError } from '../../../errors'
 import { MangaOneAuthenticationData } from '../configFields'
 // import { writeFileSync } from 'node:fs'
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const RawProto = require('rawproto').default || require('rawproto')
 
 const PROTO_MAP = {
@@ -83,7 +84,7 @@ export async function mangaone_fetchAndExtractPageList(
 async function getRawResponse(
   { title_id, chapter_id }: { title_id: string; chapter_id: string },
   { api_session, manga_one_session }: MangaOneAuthenticationData
-) {
+): Promise<ArrayBuffer> {
   // You can change these headers to whatever. I just grab them from my browser.
   // If you get error fetching this endpoint, try opening mangaone in browser, look in DevTool and see the if there are any differences here and there.
   const result = await fetch(

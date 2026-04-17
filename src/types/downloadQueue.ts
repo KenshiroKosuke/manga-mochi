@@ -7,6 +7,6 @@ export type DownloadTask = {
   pageCount?: number
   status: 'pending' | 'downloading' | 'completed' | 'failed' | 'cancelled'
   progress: number
-  error?: any
+  error?: unknown
   savePath?: string
 }

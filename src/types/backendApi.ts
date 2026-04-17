@@ -1,4 +1,5 @@
 import { AppConfig } from './appConfig'
+import { DownloadTask } from './downloadQueue'
 import { MangaPlugin } from './plugin'
 import { IpcMainErrorResponse, SafeResultPromise } from './response'
 
@@ -28,7 +29,7 @@ export interface BackendAPI {
   >
   cancelDownload: (id: string) => SafeResultPromise<true>
   cancelAllDownloads: () => SafeResultPromise<true>
-  onQueueUpdated: (callback: (queue: any[]) => void) => () => Electron.IpcRenderer
+  onQueueUpdated: (callback: (queue: DownloadTask[]) => void) => () => Electron.IpcRenderer
   onQueueProgress: (
     callback: (data: { id: string; progress: number }) => void
   ) => () => Electron.IpcRenderer

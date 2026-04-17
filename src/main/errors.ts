@@ -3,7 +3,7 @@ import { IpcMainErrorCode, IpcMainErrorDataMap } from '../types/response'
 // This is only usable in the Main process
 abstract class MainResponseError extends Error {
   abstract readonly errorCode: IpcMainErrorCode
-  constructor(message: string, data: Object = {}) {
+  constructor(message: string, data: object = {}) {
     super(message)
     Object.assign(this, data)
     Object.setPrototypeOf(this, MainResponseError.prototype)

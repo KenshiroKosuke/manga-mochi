@@ -21,11 +21,11 @@ export class DownloadQueueManager {
   /**
    * Send queue-update signal to frontend
    */
-  private broadcastQueue() {
+  private broadcastQueue(): void {
     this.webContents.send('queue-updated', this.queue)
   }
 
-  public addTask(taskInfo: { id: string; url: string }) {
+  public addTask(taskInfo: { id: string; url: string }): void {
     // If a task with this URL already exists (failed/cancelled/etc), wipe it out first.
     this.queue = this.queue.filter((t) => t.id !== taskInfo.id)
     // Then add to the queue
@@ -40,7 +40,7 @@ export class DownloadQueueManager {
     this.processNext()
   }
 
-  private async processNext() {
+  private async processNext(): Promise<void> {
     if (this.isProcessing) return
 
     const nextTask = this.queue.find((t) => t.status === 'pending')
@@ -112,8 +112,8 @@ export class DownloadQueueManager {
 
       nextTask.status = 'completed'
       nextTask.progress = 100
-    } catch (error: any) {
-      if (error instanceof DownloadCancelledError || error.errorCode === 'DOWNLOAD_CANCELLED') {
+    } catch (error: unknown) {
+      if (error instanceof DownloadCancelledError) {
         nextTask.status = 'cancelled'
       } else {
         console.error(`Download failed for ${nextTask.url}:`, error)
@@ -128,12 +128,12 @@ export class DownloadQueueManager {
     }
   }
 
-  public updateWebContents(newWebContents: WebContents) {
+  public updateWebContents(newWebContents: WebContents): void {
     this.webContents = newWebContents
     this.broadcastQueue()
   }
 
-  public cancelTask(id: string) {
+  public cancelTask(id: string): void {
     const task = this.queue.find((t) => t.id === id)
     if (!task) return
 
@@ -145,7 +145,7 @@ export class DownloadQueueManager {
     }
   }
 
-  public cancelAll() {
+  public cancelAll(): void {
     this.activeController?.abort()
     this.queue.forEach((task) => {
       if (task.status === 'pending') task.status = 'cancelled'

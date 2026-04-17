@@ -312,14 +312,15 @@ export default function DownloadQueue(): React.JSX.Element | null {
                     </button>
                   )}
 
-                  {/* 🌟 NEW: Button now sets the errorTask state to open the popup */}
-                  {task.status === 'failed' && task.error && (
+                  {task.status === 'failed' && task.error ? (
                     <button
                       onClick={() => setErrorTask(task)}
                       style={{ color: '#fca5a5', textDecoration: 'underline' }}
                     >
                       View Error
                     </button>
+                  ) : (
+                    <></>
                   )}
                 </td>
               </tr>

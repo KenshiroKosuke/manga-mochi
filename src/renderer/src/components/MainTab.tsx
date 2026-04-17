@@ -23,7 +23,7 @@ export default function MainTab({
   /**
    * Reset match state if user edits the URL
    */
-  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setUrl(e.target.value)
     setMatchedPlugin(null)
     if (status.type !== 'idle') {
@@ -34,7 +34,7 @@ export default function MainTab({
   /**
    * New Check Function
    */
-  const handleCheck = () => {
+  const handleCheck = (): void => {
     if (!url) return
 
     // Loop through plugins and test the URL against their regex list
@@ -64,19 +64,15 @@ export default function MainTab({
     if (!url) return
     setStatus({ type: 'loading', msg: 'Adding to queue...' })
 
-    try {
-      // Send it to the main process queue
-      const result = await window.backendAPI.addToQueue(url)
-      if (result.success) {
-        // Instantly reset the UI so the user can paste another link!
-        setUrl('')
-        setMatchedPlugin(null)
-        setStatus({ type: 'idle', msg: '' })
-      } else {
-        setStatus({ type: 'error', msg: `Error: ${result.error?.message || 'Unknown'}` })
-      }
-    } catch (error: any) {
-      setStatus({ type: 'error', msg: error.message || 'Failed to add to queue' })
+    // Send it to the main process queue
+    const result = await window.backendAPI.addToQueue(url)
+    if (result.success) {
+      // Instantly reset the UI so the user can paste another link!
+      setUrl('')
+      setMatchedPlugin(null)
+      setStatus({ type: 'idle', msg: '' })
+    } else {
+      setStatus({ type: 'error', msg: `Error: ${result.error?.message || 'Unknown'}` })
     }
   }
 
