@@ -38,7 +38,7 @@ export function calculateFileName({
   namingSchema: string
   pageNumber: number
   extension: PageExtension
-}) {
+}): string {
   // Logic to handle 'X' placeholder padding
   const xCount = (namingSchema.match(/X/g) || []).length
   const numStr = pageNumber.toString().padStart(xCount, '0')
@@ -58,7 +58,7 @@ export async function writeSinglePage({
   extension: PageExtension
   pageNumber: number
   pageData: Parameters<typeof writeFile>[1]
-}) {
+}): Promise<void> {
   const fileName = calculateFileName({
     namingSchema: namingSchema,
     pageNumber: pageNumber,

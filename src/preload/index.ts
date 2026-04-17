@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import { BackendAPI } from '../types/backendApi'
+import { DownloadTask } from '../types/downloadQueue'
 
 // Custom APIs for renderer
 
@@ -14,16 +15,17 @@ const backendAPI: BackendAPI = {
   addToQueue: (url) => ipcRenderer.invoke('start-download', url),
   cancelDownload: (id) => ipcRenderer.invoke('cancel-download', id),
   cancelAllDownloads: () => ipcRenderer.invoke('cancel-all-downloads'),
-  onQueueUpdated: (callback: (queue: any[]) => void) => {
-    const listener = (_event: any, queue: any[]) => callback(queue)
+  onQueueUpdated: (callback: (queue: DownloadTask[]) => void) => {
+    const listener = (_event: unknown, queue: DownloadTask[]): void => callback(queue)
     ipcRenderer.on('queue-updated', listener)
 
     // Return a function to remove the listener
     return () => ipcRenderer.removeListener('queue-updated', listener)
   },
 
-  onQueueProgress: (callback: (data: { id: string; progress: number }) => void) => {
-    const listener = (_event: any, data: any) => callback(data)
+  onQueueProgress: (callback: (data: Pick<DownloadTask, 'id' | 'progress'>) => void) => {
+    const listener = (_event: unknown, data: Pick<DownloadTask, 'id' | 'progress'>): void =>
+      callback(data)
     ipcRenderer.on('queue-progress', listener)
 
     return () => ipcRenderer.removeListener('queue-progress', listener)

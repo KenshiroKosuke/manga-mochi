@@ -2,7 +2,7 @@
 export type IpcMainErrorDataMap = {
   INVALID_CHAPTER_URL_ERROR: { url: string }
   NO_MATCHING_PLUGIN_ERROR: { url: string }
-  INVALID_CONFIG_ERROR: { configs: { name: string; value: any; error: any }[] }
+  INVALID_CONFIG_ERROR: { configs: { name: string; value: unknown; error: unknown }[] }
   NO_PAGE_ERROR: { hint: string }
   EXTRACTION_FAILED_ERROR: { plugin: string; reason: string }
   DOWNLOAD_CANCELLED: undefined
@@ -23,11 +23,11 @@ export type IpcMainErrorResponse = {
  * Define the standard response structure.
  * Generic Type E for error can be a union.
  */
-export type SafeResult<T, E = { message: string }> =
+export type SafeResult<T, E = { message: string; name: string }> =
   | { success: true; data: T }
   | { success: false; error: E }
 
 /**
  * Promise for async operation return type
  */
-export type SafeResultPromise<T, E = { message: string }> = Promise<SafeResult<T, E>>
+export type SafeResultPromise<T, E = { message: string; name: string }> = Promise<SafeResult<T, E>>

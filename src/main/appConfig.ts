@@ -22,9 +22,9 @@ export async function loadConfig(): Promise<AppConfig> {
     // 1. Just try to read it directly (avoids existsSync anti-pattern)
     const data = await readFile(CONFIG_PATH, 'utf-8')
     return JSON.parse(data)
-  } catch (error: any) {
+  } catch (error: unknown) {
     // 2. If the error is ENOENT, the file simply doesn't exist yet.
-    if (error.code === 'ENOENT') {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
       console.log('❌ Config not found. Creating default...')
     } else {
       console.log('❌ Config corrupted or unreadable. Overwriting with default...')
