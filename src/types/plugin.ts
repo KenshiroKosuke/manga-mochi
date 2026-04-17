@@ -41,6 +41,9 @@ export type ChapterMetaData = {
   chapterId: string
   chapterNumber: string | undefined
   chapterName: string | undefined
+  /**
+   * Effective name for a chapter
+   */
   chapterDisplayName: string
   pageCount: number
 }

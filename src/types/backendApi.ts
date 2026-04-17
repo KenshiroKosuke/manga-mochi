@@ -17,7 +17,7 @@ export interface BackendAPI {
    *        matching plugin before clicking download button. Main process won't need to find it
    *        again which also reduces time a little.
    */
-  startDownload: (
+  addToQueue: (
     url: string
   ) => SafeResultPromise<
     string,

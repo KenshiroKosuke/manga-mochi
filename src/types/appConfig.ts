@@ -3,6 +3,10 @@ export interface AppConfig {
     downloadDir: string
     namingSchema: string
     pinnedSites: string[] // Stores the order of plugins
+    /**
+     * If true, do not warn user when directory already exists
+     */
+    downloadForceWhenDirExisted?: boolean
   }
-  sites: Record<string, unknown> // Stores configs per site ID
+  sites: { [siteId: string]: unknown } // Stores configs per site ID
 }

@@ -11,7 +11,7 @@ const backendAPI: BackendAPI = {
   getAppData: () => ipcRenderer.invoke('get-app-data'),
   selectDir: () => ipcRenderer.invoke('select-dir'),
   saveConfig: (newConfig) => ipcRenderer.invoke('save-config', newConfig),
-  startDownload: (url) => ipcRenderer.invoke('start-download', url),
+  addToQueue: (url) => ipcRenderer.invoke('start-download', url),
   cancelDownload: (id) => ipcRenderer.invoke('cancel-download', id),
   cancelAllDownloads: () => ipcRenderer.invoke('cancel-all-downloads'),
   onQueueUpdated: (callback: (queue: any[]) => void) => {

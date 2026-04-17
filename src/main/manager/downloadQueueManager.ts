@@ -1,9 +1,11 @@
-import { WebContents } from 'electron'
+import { BrowserWindow, dialog, WebContents } from 'electron'
 import { NoMatchingPluginError, DownloadCancelledError } from '../errors'
 import { AppConfig } from '../../types/appConfig'
 import { MangaPlugin } from '../../types/plugin'
 import { DownloadTask } from '../../types/downloadQueue'
 import { formatResponseError } from '../responseWrapper'
+import { join } from 'node:path'
+import { existsSync } from 'node:fs'
 
 export class DownloadQueueManager {
   private queue: DownloadTask[] = []
@@ -52,7 +54,7 @@ export class DownloadQueueManager {
 
     try {
       const config = this.getConfig()
-      const { downloadDir, namingSchema } = config.global
+      const { downloadDir, namingSchema, downloadForceWhenDirExisted } = config.global
 
       if (!downloadDir) throw new Error('Download directory not set.')
 
@@ -66,15 +68,37 @@ export class DownloadQueueManager {
       }
 
       const siteConfig = config.sites[matchedPlugin.id]
+      // 2. Fetch Metadata
       const metadata = await matchedPlugin.getChapterMetaData(nextTask.url, siteConfig)
       // nextTask.title = `「${metadata.mangaName}」${metadata.chapterDisplayName}`
       nextTask.pageCount = metadata.pageCount
       nextTask.mangaTitle = metadata.mangaName ?? '-'
       nextTask.chapterTitle = metadata.chapterDisplayName
+      const expectedPath = join(downloadDir, nextTask.mangaTitle, metadata.chapterDisplayName)
+      nextTask.savePath = expectedPath
       this.broadcastQueue()
 
-      // 2. Run the dynamic plugin logic
-      const fullDir = await matchedPlugin.downloadChapter(
+      // Check for force rewrite options
+      if (existsSync(expectedPath) && !downloadForceWhenDirExisted) {
+        const parentWindow = BrowserWindow.fromWebContents(this.webContents)
+        // This 'await' pauses the queue entirely until they click!
+        const { response } = await dialog.showMessageBox(parentWindow!, {
+          type: 'warning',
+          buttons: ['Ok', 'Cancel'],
+          defaultId: 1, // Default to Cancel so they don't accidentally hit Enter and overwrite
+          cancelId: 1,
+          title: 'Directory Already Exists',
+          message: `The folder for "「${metadata.mangaName}」${metadata.chapterDisplayName}" already exists.`,
+          detail: 'Do you want to overwrite it and download again?'
+        })
+        if (response === 1) {
+          // User clicked 'Cancel Download'
+          throw new DownloadCancelledError()
+        }
+      }
+
+      // 3. Run the dynamic plugin logic
+      await matchedPlugin.downloadChapter(
         nextTask.url,
         downloadDir,
         namingSchema,
@@ -88,7 +112,6 @@ export class DownloadQueueManager {
 
       nextTask.status = 'completed'
       nextTask.progress = 100
-      nextTask.savePath = fullDir
     } catch (error: any) {
       if (error instanceof DownloadCancelledError || error.errorCode === 'DOWNLOAD_CANCELLED') {
         nextTask.status = 'cancelled'

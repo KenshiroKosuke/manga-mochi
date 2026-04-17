@@ -93,6 +93,33 @@ export default function ConfigPopup({
                   className="form-input"
                 />
               </div>
+
+              <div
+                className="form-group"
+                style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '24px' }}
+              >
+                <input
+                  type="checkbox"
+                  id="downloadForceWhenDirExisted"
+                  checked={!!localConfig.global.downloadForceWhenDirExisted}
+                  onChange={(e) =>
+                    setLocalConfig({
+                      ...localConfig,
+                      global: {
+                        ...localConfig.global,
+                        downloadForceWhenDirExisted: e.target.checked
+                      }
+                    })
+                  }
+                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                />
+                <label
+                  htmlFor="forceDownload"
+                  style={{ margin: 0, cursor: 'pointer', color: 'var(--text-primary)' }}
+                >
+                  Always overwrite existing folders without warning
+                </label>
+              </div>
             </>
           ) : (
             <>

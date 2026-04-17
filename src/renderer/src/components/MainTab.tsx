@@ -62,15 +62,19 @@ export default function MainTab({
   // Fire and Forget!
   const handleStart = async (): Promise<void> => {
     if (!url) return
+    setStatus({ type: 'loading', msg: 'Adding to queue...' })
 
     try {
       // Send it to the main process queue
-      await window.backendAPI.startDownload(url)
-
-      // Instantly reset the UI so the user can paste another link!
-      setUrl('')
-      setMatchedPlugin(null)
-      setStatus({ type: 'idle', msg: '' })
+      const result = await window.backendAPI.addToQueue(url)
+      if (result.success) {
+        // Instantly reset the UI so the user can paste another link!
+        setUrl('')
+        setMatchedPlugin(null)
+        setStatus({ type: 'idle', msg: '' })
+      } else {
+        setStatus({ type: 'error', msg: `Error: ${result.error?.message || 'Unknown'}` })
+      }
     } catch (error: any) {
       setStatus({ type: 'error', msg: error.message || 'Failed to add to queue' })
     }
@@ -80,7 +84,7 @@ export default function MainTab({
   //   if (!url) return
   //   setStatus({ type: 'loading', msg: 'Downloading...' })
   //   try {
-  //     const result = await window.backendAPI.startDownload(url)
+  //     const result = await window.backendAPI.addToQueue(url)
   //     console.log(JSON.stringify(result))
   //     if (result.success) {
   //       setStatus({ type: 'success', msg: result.data })
