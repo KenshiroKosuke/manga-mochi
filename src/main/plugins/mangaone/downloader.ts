@@ -29,16 +29,17 @@ export const mangaone_getChapterMetaData: GetChapterMetaDataFunction = async (ur
 
   const chapterId = chapterUrlValidationResult.chapterId
 
-  const { urls, chapterName, chapterNumber, mangaName } = await mangaone_fetchAndExtractPageList(
-    {
-      title_id: chapterUrlValidationResult.mangaId,
-      chapter_id: chapterId
-    },
-    {
-      api_session: configData.api_session,
-      manga_one_session: configData.manga_one_session
-    }
-  )
+  const { urls, chapterName, chapterNumber, mangaName, decryptData } =
+    await mangaone_fetchAndExtractPageList(
+      {
+        title_id: chapterUrlValidationResult.mangaId,
+        chapter_id: chapterId
+      },
+      {
+        api_session: configData.api_session,
+        manga_one_session: configData.manga_one_session
+      }
+    )
 
   return {
     chapterId,
@@ -52,7 +53,7 @@ export const mangaone_getChapterMetaData: GetChapterMetaDataFunction = async (ur
       chapterNumber,
       chapterTitle: chapterName
     }),
-    savedData: { urls, chapterName, chapterNumber, mangaName }
+    savedData: { urls, chapterName, chapterNumber, mangaName, decryptData }
   }
 }
 
@@ -110,7 +111,7 @@ export const mangaone_downloadChapter: DownloadChapterFunction = async (
     }
     const url = urls[pageNumber - 1]
     const bufferData = await mangaone_fetchAndDecryptPage(url, decryptData)
-    const detectedExtension = detectPageExtension(bufferData, '.webp')
+    const detectedExtension = detectPageExtension(bufferData, '.png')
     await writeSinglePage({
       extension: detectedExtension,
       fullDir: fullDir,
