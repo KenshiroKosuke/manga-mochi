@@ -6,7 +6,10 @@ import { MangaOneConfigSchema } from './configFields'
 import { mangaone_validateChapterUrl } from './urlValidator'
 import { detectPageExtension, writeSinglePage } from '../writePage.util'
 import { ensureDir } from '../../directory.util'
-import { mangaone_fetchAndExtractPageList } from './extractor/extractChapter'
+import {
+  mangaone_fetchAndExtractPageList,
+  MangaoneFetchAndExtractPageListResponse
+} from './extractor/extractChapter'
 import { mangaone_fetchAndDecryptPage } from './extractor/decryptPage'
 import { validateConfigSchema } from '../pluginConfig.util'
 import { formatChapterDisplayName } from '../formatName.util'
@@ -39,15 +42,17 @@ export const mangaone_getChapterMetaData: GetChapterMetaDataFunction = async (ur
 
   return {
     chapterId,
-    chapterName,
+    chapterTitle: chapterName,
     chapterNumber,
-    mangaName,
+    mangaId: chapterUrlValidationResult.mangaId,
+    mangaTitle: mangaName,
     pageCount: urls.length,
     chapterDisplayName: formatChapterDisplayName({
       chapterId,
       chapterNumber,
-      chapterName
-    })
+      chapterTitle: chapterName
+    }),
+    savedData: { urls, chapterName, chapterNumber, mangaName }
   }
 }
 
@@ -56,8 +61,8 @@ export const mangaone_downloadChapter: DownloadChapterFunction = async (
   savePath,
   namingSchema,
   configData,
-  onProgress,
-  abortSignal
+  chapterMetaData,
+  taskProcess
 ) => {
   // Q. Do we need to verify config everytime? Seems like just at the app start up would be enough
   // A. Yes, we do. Otherwise, how would we check if it's before or after user provided the config.
@@ -69,8 +74,9 @@ export const mangaone_downloadChapter: DownloadChapterFunction = async (
     })
   }
 
-  const { urls, decryptData, chapterName, chapterNumber, mangaName } =
-    await mangaone_fetchAndExtractPageList(
+  const { urls, chapterName, chapterNumber, decryptData, mangaName } =
+    (chapterMetaData?.savedData as MangaoneFetchAndExtractPageListResponse) ??
+    (await mangaone_fetchAndExtractPageList(
       {
         title_id: chapterUrlValidationResult.mangaId,
         chapter_id: chapterUrlValidationResult.chapterId
@@ -79,7 +85,7 @@ export const mangaone_downloadChapter: DownloadChapterFunction = async (
         api_session: configData.api_session,
         manga_one_session: configData.manga_one_session
       }
-    )
+    ))
 
   if (urls.length == 0) {
     throw new NoPageError({ hint: 'Recheck if your api session is still valid.' })
@@ -88,13 +94,10 @@ export const mangaone_downloadChapter: DownloadChapterFunction = async (
   const fullDir = path.join(
     savePath,
     mangaName ?? chapterUrlValidationResult.mangaId,
-    // chapterNumber || chapterName
-    //   ? ((chapterNumber ?? '') + ' ' + (chapterName ?? '')).trim()
-    //   : chapterUrlValidationResult.chapterId
     formatChapterDisplayName({
       chapterId: chapterUrlValidationResult.chapterId,
       chapterNumber,
-      chapterName
+      chapterTitle: chapterName
     })
   )
   console.log(`[mangaone_downloadChapter] Prepare writing file to ${fullDir} ...`)
@@ -102,7 +105,7 @@ export const mangaone_downloadChapter: DownloadChapterFunction = async (
   const pageLength = urls.length
   for (let pageNumber = 1; pageNumber <= pageLength; pageNumber++) {
     // Check for cancellation BEFORE starting the next page
-    if (abortSignal.aborted) {
+    if (taskProcess?.abortSignal.aborted) {
       throw new DownloadCancelledError()
     }
     const url = urls[pageNumber - 1]
@@ -117,7 +120,7 @@ export const mangaone_downloadChapter: DownloadChapterFunction = async (
     })
 
     // Report Progress back to the queue manager
-    onProgress(pageNumber, pageLength)
+    taskProcess?.onProgress(pageNumber, pageLength)
 
     if (pageNumber !== pageLength) {
       const sleepTime = 0.5

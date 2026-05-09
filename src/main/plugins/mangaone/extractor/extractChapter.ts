@@ -18,6 +18,14 @@ const PROTO_MAP = {
   chapter_title: '7.3:string'
 } as const
 
+export type MangaoneFetchAndExtractPageListResponse = {
+  urls: string[]
+  decryptData: AESDecryptParams
+  mangaName: string | undefined
+  chapterName: string | undefined
+  chapterNumber: string | undefined
+}
+
 /**
  * @param param0 - query for chapter
  * @param param1 - authentication data to access the chapter
@@ -25,13 +33,7 @@ const PROTO_MAP = {
 export async function mangaone_fetchAndExtractPageList(
   { title_id, chapter_id }: { title_id: string; chapter_id: string },
   authData: MangaOneAuthenticationData
-): Promise<{
-  urls: string[]
-  decryptData: AESDecryptParams
-  mangaName: string | undefined
-  chapterName: string | undefined
-  chapterNumber: string | undefined
-}> {
+): Promise<MangaoneFetchAndExtractPageListResponse> {
   const buffer = new Uint8Array(await getRawResponse({ title_id, chapter_id }, authData))
   const proto = new RawProto(buffer)
   const hexKey: string | undefined = proto.query(PROTO_MAP.hex_key)[0]

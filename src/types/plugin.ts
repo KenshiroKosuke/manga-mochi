@@ -32,20 +32,25 @@ export type DownloadChapterFunction = (
   // After main process used validateChapterUrl to find the correct plugin.
   // Could be `undefined` if the config is missing from .mangamochi entirely
   configData: unknown,
-  onProgress: (current: number, total: number) => void,
-  abortSignal: AbortSignal
+  chapterMetaData: ChapterMetaData | undefined,
+  taskProcess?: {
+    onProgress: (current: number, total: number) => void
+    abortSignal: AbortSignal
+  }
 ) => Promise<string>
 
 export type ChapterMetaData = {
-  mangaName: string | undefined
-  chapterId: string
+  mangaTitle: string | undefined
+  mangaId: string | undefined
+  chapterId: string | undefined
   chapterNumber: string | undefined
-  chapterName: string | undefined
+  chapterTitle: string | undefined
   /**
    * Effective name for a chapter
    */
   chapterDisplayName: string
   pageCount: number
+  savedData?: unknown
 }
 
 export type GetChapterMetaDataFunction = (

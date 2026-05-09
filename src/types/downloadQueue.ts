@@ -1,3 +1,5 @@
+import { ChapterMetaData } from './plugin'
+
 export type DownloadTask = {
   id: string
   // title: string
@@ -9,4 +11,8 @@ export type DownloadTask = {
   progress: number
   error?: unknown
   savePath?: string
+  /**
+   * The complete metadata object
+   */
+  chapterMetaData?: ChapterMetaData
 }

@@ -72,10 +72,11 @@ export class DownloadQueueManager {
       const metadata = await matchedPlugin.getChapterMetaData(nextTask.url, siteConfig)
       // nextTask.title = `「${metadata.mangaName}」${metadata.chapterDisplayName}`
       nextTask.pageCount = metadata.pageCount
-      nextTask.mangaTitle = metadata.mangaName ?? '-'
+      nextTask.mangaTitle = metadata.mangaTitle ?? '-'
       nextTask.chapterTitle = metadata.chapterDisplayName
       const expectedPath = join(downloadDir, nextTask.mangaTitle, metadata.chapterDisplayName)
       nextTask.savePath = expectedPath
+      nextTask.chapterMetaData = metadata
       this.broadcastQueue()
 
       // Check for force rewrite options
@@ -88,7 +89,7 @@ export class DownloadQueueManager {
           defaultId: 1, // Default to Cancel so they don't accidentally hit Enter and overwrite
           cancelId: 1,
           title: 'Directory Already Exists',
-          message: `The folder for "「${metadata.mangaName}」${metadata.chapterDisplayName}" already exists.`,
+          message: `The folder for "「${metadata.mangaTitle}」${metadata.chapterDisplayName}" already exists.`,
           detail: 'Do you want to overwrite it and download again?'
         })
         if (response === 1) {
@@ -103,11 +104,17 @@ export class DownloadQueueManager {
         downloadDir,
         namingSchema,
         siteConfig,
-        (current: number, total: number) => {
-          nextTask.progress = Math.round((current / total) * 100)
-          this.webContents.send('queue-progress', { id: nextTask.id, progress: nextTask.progress })
-        },
-        this.activeController.signal
+        nextTask.chapterMetaData,
+        {
+          abortSignal: this.activeController.signal,
+          onProgress: (current: number, total: number) => {
+            nextTask.progress = Math.round((current / total) * 100)
+            this.webContents.send('queue-progress', {
+              id: nextTask.id,
+              progress: nextTask.progress
+            })
+          }
+        }
       )
 
       nextTask.status = 'completed'

@@ -15,7 +15,7 @@ export function detectPageExtension(
 
   if (guessedTypes.length > 0) {
     const ext = guessedTypes[0].extension
-    console.log('[detectPageExtension] ext:', ext)
+    // console.log('[detectPageExtension] ext:', ext)
 
     // Map the library's output to your strict PageExtension type
     if (ext === 'jpeg' || ext === 'jpg') return '.jpg'
