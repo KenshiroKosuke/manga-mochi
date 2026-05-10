@@ -28,12 +28,14 @@ $  node main.mjs <<url>>
 
 ## Support Sites
 
-| Mangaone | [https://manga-one.com/](https://manga-one.com/) |
-| -------- | --------------------------------------------- |
-
-- Mangaone: in-memory page + encrypted AES
-- ichicomi: normal fetch + gigaviewer scramble (transpose)
-- takecomic: viewer id + fetch img url + scramble pattern COMICI
+| Site         | URL                                          | Note                                                | Status |
+| :----------- | -------------------------------------------- | :-------------------------------------------------- | :----: |
+| Mangaone     | [https://manga-one.com](https://manga-one.com/) | in-memory page + encrypted AES                      |   ✅   |
+| TakeComi     | [https://takecomic.jp](https://takecomic.jp)    | viewer id + fetch img url + scramble pattern COMICI |   ✅   |
+| ichicomi     |                                              | normal fetch + gigaviewer scramble (transpose)      |  ⚒️  |
+| comic-walker |                                              |                                                     |   ❌   |
+| comic-fuz    |                                              |                                                     |   ❌   |
+| bookwalker   |                                              |                                                     |   ❌   |
 
 ## Contribute
 

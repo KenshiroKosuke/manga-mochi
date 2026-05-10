@@ -81,7 +81,8 @@ export default function DownloadsTab({
       <div className="downloads-tab-header">
         <h1 className="downloads-tab-title">New Download</h1>
         <p className="downloads-tab-subtitle">
-          Paste the URL of the chapter or series you want to download.
+          Paste the URL of the chapter you want to download. You can change settings in the Configs
+          tab.
         </p>
       </div>
 
