@@ -1,50 +1,34 @@
-// import Versions from './components/Versions'
-// import electronLogo from './assets/electron.svg'
-
-// function App(): React.JSX.Element {
-//   // const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
-
-//   return (
-//     <>
-//       <img alt="logo" className="logo" src={electronLogo} />
-//       <div className="creator">Powered by electron-vite</div>
-//       <div className="text">
-//         Build an Electron app with <span className="react">React</span>
-//         &nbsp;and <span className="ts">TypeScript</span>
-//       </div>
-//       <p className="tip">
-//         Please try pressing <code>F12</code> to open the devTool
-//       </p>
-//       <div className="actions">
-//         <div className="action">
-//           <a href="https://electron-vite.org/" target="_blank" rel="noreferrer">
-//             Documentation
-//           </a>
-//         </div>
-//         <div className="action">
-//           <a target="_blank" rel="noreferrer" onClick={window.backendAPI.getAppData}>
-//             Send IPC
-//           </a>
-//         </div>
-//       </div>
-//       <Versions></Versions>
-//     </>
-//   )
-// }
-
-// export default App
-
 import { useState, useEffect } from 'react'
-import Sidebar from './components/Sidebar'
-import MainTab from './components/MainTab'
-import { AppConfig } from '../../types/appConfig'
-
+import ConfigsTab from './components/ConfigsTab'
+import DownloadsTab from './components/DownloadsTab'
+import { AppConfig } from 'src/types/appConfig'
 import { MangaPlugin } from 'src/types/plugin'
+
+type TabID = 'downloads' | 'configs' | 'history'
+
+interface TabButtonProps {
+  id: TabID
+  label: string
+  activeTab: TabID
+  onClick: (id: TabID) => void
+}
+
+function TabButton({ id, label, activeTab, onClick }: TabButtonProps): React.JSX.Element {
+  return (
+    <button
+      className={`tab-button ${activeTab === id ? 'active' : ''}`}
+      onClick={() => onClick(id)}
+    >
+      {label}
+    </button>
+  )
+}
 
 export default function App(): React.JSX.Element {
   const [config, setConfig] = useState<AppConfig | null>(null)
   const [plugins, setPlugins] = useState<MangaPlugin[]>([])
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<TabID>('downloads')
 
   useEffect(() => {
     window.backendAPI.getAppData().then((result) => {
@@ -72,9 +56,32 @@ export default function App(): React.JSX.Element {
 
   return (
     <div className="app-container">
-      <Sidebar config={config} plugins={plugins} onConfigUpdate={handleConfigUpdate} />
-      <div className="main-tab">
-        <MainTab config={config} plugins={plugins} />
+      <nav className="tab-navigation">
+        <TabButton id="downloads" label="Downloads" activeTab={activeTab} onClick={setActiveTab} />
+        <TabButton id="configs" label="Configs" activeTab={activeTab} onClick={setActiveTab} />
+        <TabButton id="history" label="History" activeTab={activeTab} onClick={setActiveTab} />
+      </nav>
+
+      {/**
+       * Use undefined when the tab is active so that the display: flex from .tab-pane CSS class
+       * takes effect naturally
+       */}
+      <div className="tab-content">
+        <div
+          className="tab-pane"
+          style={{ display: activeTab === 'downloads' ? undefined : 'none' }}
+        >
+          <DownloadsTab config={config} plugins={plugins} />
+        </div>
+
+        <div className="tab-pane" style={{ display: activeTab === 'configs' ? undefined : 'none' }}>
+          <ConfigsTab config={config} plugins={plugins} onConfigUpdate={handleConfigUpdate} />
+        </div>
+
+        <div className="tab-pane" style={{ display: activeTab === 'history' ? undefined : 'none' }}>
+          <h1 className="history-tab-title">History</h1>
+          <p className="history-tab-subtitle">Past downloads will appear here in the future.</p>
+        </div>
       </div>
     </div>
   )

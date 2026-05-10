@@ -2,11 +2,26 @@ import { useEffect, useState } from 'react'
 import React from 'react'
 import { DownloadTask } from 'src/types/downloadQueue'
 
+type ColumnDef = {
+  id: string
+  label: string
+  width: string
+  align?: 'left' | 'right' | 'center'
+}
+
+const QUEUE_COLUMNS: ColumnDef[] = [
+  { id: 'manga', label: 'Manga', width: '22%' },
+  { id: 'chapter', label: 'Chapter', width: '22%' },
+  { id: 'url', label: 'URL', width: '18%' },
+  { id: 'status', label: 'Status', width: '10%' },
+  { id: 'progress', label: 'Progress', width: '16%' },
+  { id: 'action', label: 'Action', width: '12%', align: 'right' }
+]
+
 export default function DownloadQueue(): React.JSX.Element | null {
   const [queue, setQueue] = useState<DownloadTask[]>([])
-  // const [expandedErrorId, setExpandedErrorId] = useState<string | null>(null)
-  // 🌟 NEW: Track the whole task object for the popup instead of just an ID
-  const [errorTask, setErrorTask] = useState<DownloadTask | null>(null)
+  // Track the whole task object for the details popup
+  const [selectedTask, setSelectedTask] = useState<DownloadTask | null>(null)
 
   useEffect(() => {
     const cleanupQueue = window.backendAPI.onQueueUpdated((newQueue) => setQueue(newQueue))
@@ -25,7 +40,7 @@ export default function DownloadQueue(): React.JSX.Element | null {
   const hasActiveTasks = queue.some((t) => t.status === 'pending' || t.status === 'downloading')
 
   return (
-    // 🌟 flex: 1 and minHeight: 0 forces it to stay within the bounds of MainTab
+    // 🌟 flex: 1 and minHeight: 0 forces it to stay within the bounds of Downloads tab
     <div
       style={{
         flex: 1,
@@ -78,143 +93,32 @@ export default function DownloadQueue(): React.JSX.Element | null {
         {/* 🌟 The Table UI
           - table-layout: fixed and minWidth forces horizontal scrolling on small screens
           */}
-        <table
-          style={{
-            // width: '100%',
-            // borderCollapse: 'collapse',
-            // textAlign: 'left',
-            // fontSize: '0.85rem'
-            minWidth: '840px',
-            width: '100%',
-            borderCollapse: 'collapse', // minimal + reduce space
-            textAlign: 'left',
-            fontSize: '0.85rem',
-            tableLayout: 'fixed'
-          }}
-        >
+        <table className="queue-table">
           <thead>
             <tr>
-              {/* Sticky headers with opaque backgrounds and strict widths */}
-              <th
-                style={{
-                  width: '22%',
-                  padding: '12px',
-                  borderBottom: '1px solid var(--border-color)',
-                  position: 'sticky',
-                  top: 0,
-                  background: 'var(--bg-hover)',
-                  zIndex: 1
-                }}
-              >
-                Manga
-              </th>
-              <th
-                style={{
-                  width: '22%',
-                  padding: '12px',
-                  borderBottom: '1px solid var(--border-color)',
-                  position: 'sticky',
-                  top: 0,
-                  background: 'var(--bg-hover)',
-                  zIndex: 1
-                }}
-              >
-                Chapter
-              </th>
-              <th
-                style={{
-                  width: '18%',
-                  padding: '12px',
-                  borderBottom: '1px solid var(--border-color)',
-                  position: 'sticky',
-                  top: 0,
-                  background: 'var(--bg-hover)',
-                  zIndex: 1
-                }}
-              >
-                URL
-              </th>
-              <th
-                style={{
-                  width: '10%',
-                  padding: '12px',
-                  borderBottom: '1px solid var(--border-color)',
-                  position: 'sticky',
-                  top: 0,
-                  background: 'var(--bg-hover)',
-                  zIndex: 1
-                }}
-              >
-                Status
-              </th>
-              <th
-                style={{
-                  width: '16%',
-                  padding: '12px',
-                  borderBottom: '1px solid var(--border-color)',
-                  position: 'sticky',
-                  top: 0,
-                  background: 'var(--bg-hover)',
-                  zIndex: 1
-                }}
-              >
-                Progress
-              </th>
-              <th
-                style={{
-                  width: '12%',
-                  padding: '12px',
-                  borderBottom: '1px solid var(--border-color)',
-                  textAlign: 'right',
-                  position: 'sticky',
-                  top: 0,
-                  background: 'var(--bg-hover)',
-                  zIndex: 1
-                }}
-              >
-                Action
-              </th>
+              {QUEUE_COLUMNS.map((col) => (
+                <th key={col.id} style={{ width: col.width, textAlign: col.align || 'left' }}>
+                  {col.label}
+                </th>
+              ))}
             </tr>
           </thead>
 
           <tbody>
             {queue.map((task) => (
-              <tr key={task.id}>
-                <td
-                  style={{
-                    padding: '12px',
-                    borderBottom: '1px solid var(--border-color)',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}
-                  title={task.mangaTitle}
-                >
+              // Since row is clickable, the children components need stopPropagation to prevent this onClick handler
+              <tr key={task.id} onClick={() => setSelectedTask(task)} className="queue-row">
+                <td className="truncate" title={task.mangaTitle}>
                   {task.mangaTitle}
                 </td>
 
-                <td
-                  style={{
-                    padding: '12px',
-                    borderBottom: '1px solid var(--border-color)',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}
-                  title={task.chapterTitle}
-                >
+                <td className="truncate" title={task.chapterTitle}>
                   {task.chapterTitle}
                 </td>
 
                 <td
-                  style={{
-                    padding: '12px',
-                    borderBottom: '1px solid var(--border-color)',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    color: 'var(--text-secondary)'
-                  }}
+                  className="truncate"
+                  style={{ color: 'var(--text-secondary)' }}
                   title={task.url}
                 >
                   {task.url}
@@ -223,8 +127,6 @@ export default function DownloadQueue(): React.JSX.Element | null {
                 {/* Status */}
                 <td
                   style={{
-                    padding: '12px',
-                    borderBottom: '1px solid var(--border-color)',
                     textTransform: 'uppercase',
                     fontSize: '0.75rem',
                     fontWeight: 600
@@ -234,11 +136,11 @@ export default function DownloadQueue(): React.JSX.Element | null {
                     style={{
                       color:
                         task.status === 'failed'
-                          ? '#fca5a5'
+                          ? 'var(--danger-red-light)'
                           : task.status === 'completed'
-                            ? '#86efac'
+                            ? 'var(--accent-green-light)'
                             : task.status === 'cancelled'
-                              ? '#fde047'
+                              ? 'var(--accent-yellow-light)'
                               : 'var(--text-primary)'
                     }}
                   >
@@ -247,7 +149,7 @@ export default function DownloadQueue(): React.JSX.Element | null {
                 </td>
 
                 {/* Progress Bar */}
-                <td style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>
+                <td>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <div
                       style={{
@@ -267,9 +169,9 @@ export default function DownloadQueue(): React.JSX.Element | null {
                             task.status === 'failed'
                               ? 'var(--danger-red)'
                               : task.status === 'completed'
-                                ? '#22c55e'
+                                ? 'var(--accent-green)'
                                 : task.status === 'cancelled'
-                                  ? '#eab308'
+                                  ? 'var(--accent-yellow)'
                                   : 'var(--accent-blue)'
                         }}
                       />
@@ -287,17 +189,14 @@ export default function DownloadQueue(): React.JSX.Element | null {
                 </td>
 
                 {/* Actions */}
-                <td
-                  style={{
-                    padding: '12px',
-                    borderBottom: '1px solid var(--border-color)',
-                    textAlign: 'right'
-                  }}
-                >
+                <td style={{ textAlign: 'right' }}>
                   {(task.status === 'pending' || task.status === 'downloading') && (
                     <button
-                      onClick={() => window.backendAPI.cancelDownload(task.id)}
-                      style={{ color: '#fca5a5', textDecoration: 'underline' }}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        window.backendAPI.cancelDownload(task.id)
+                      }}
+                      style={{ color: 'var(--danger-red-light)', textDecoration: 'underline' }}
                     >
                       Cancel
                     </button>
@@ -305,19 +204,25 @@ export default function DownloadQueue(): React.JSX.Element | null {
 
                   {task.status === 'completed' && task.savePath && (
                     <button
-                      onClick={() => window.backendAPI.openFolder(task.savePath!)}
-                      style={{ color: '#86efac', textDecoration: 'underline' }}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        window.backendAPI.openFolder(task.savePath!)
+                      }}
+                      style={{ color: 'var(--accent-green-light)', textDecoration: 'underline' }}
                     >
                       Open
                     </button>
                   )}
 
-                  {task.status === 'failed' && task.error ? (
+                  {task.status === 'failed' ? (
                     <button
-                      onClick={() => setErrorTask(task)}
-                      style={{ color: '#fca5a5', textDecoration: 'underline' }}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        window.backendAPI.addToQueue(task.url)
+                      }}
+                      style={{ color: 'var(--accent-blue)', textDecoration: 'underline' }}
                     >
-                      View Error
+                      Retry
                     </button>
                   ) : (
                     <></>
@@ -327,17 +232,17 @@ export default function DownloadQueue(): React.JSX.Element | null {
             ))}
           </tbody>
         </table>
-        {/* 🌟 The Error Modal Popup */}
-        {errorTask && (
-          <div className="modal-overlay" onClick={() => setErrorTask(null)}>
+        {/* 🌟 The Details Modal Popup */}
+        {selectedTask && (
+          <div className="modal-overlay" onClick={() => setSelectedTask(null)}>
             <div
               className="modal-content"
               onClick={(e) => e.stopPropagation()}
               style={{ width: '600px' }}
             >
               <div className="modal-header">
-                <h3 style={{ margin: 0, color: '#fca5a5' }}>Download Error</h3>
-                <button className="btn-close" onClick={() => setErrorTask(null)}>
+                <h3 style={{ margin: 0 }}>Task Details</h3>
+                <button className="btn-close" onClick={() => setSelectedTask(null)}>
                   ✕
                 </button>
               </div>
@@ -346,38 +251,64 @@ export default function DownloadQueue(): React.JSX.Element | null {
                 <div style={{ marginBottom: '16px', fontSize: '0.9rem' }}>
                   <div style={{ color: 'var(--text-secondary)' }}>
                     Manga:{' '}
-                    <span style={{ color: 'var(--text-primary)' }}>{errorTask.mangaTitle}</span>
+                    <span style={{ color: 'var(--text-primary)' }}>{selectedTask.mangaTitle}</span>
                   </div>
                   <div style={{ color: 'var(--text-secondary)' }}>
                     Chapter:{' '}
-                    <span style={{ color: 'var(--text-primary)' }}>{errorTask.chapterTitle}</span>
+                    <span style={{ color: 'var(--text-primary)' }}>
+                      {selectedTask.chapterTitle}
+                    </span>
                   </div>
                   <div style={{ color: 'var(--text-secondary)' }}>
-                    Url: <span style={{ color: 'var(--text-primary)' }}>{errorTask.url}</span>
+                    Url:{' '}
+                    <span
+                      style={{
+                        color: 'var(--text-primary)',
+                        wordBreak: 'break-all',
+                        userSelect: 'all'
+                      }}
+                    >
+                      {selectedTask.url}
+                    </span>
+                  </div>
+                  <div style={{ color: 'var(--text-secondary)' }}>
+                    Status:{' '}
+                    <span style={{ color: 'var(--text-primary)', textTransform: 'uppercase' }}>
+                      {selectedTask.status}
+                    </span>
+                  </div>
+                  <div style={{ color: 'var(--text-secondary)' }}>
+                    Progress:{' '}
+                    <span style={{ color: 'var(--text-primary)' }}>{selectedTask.progress}%</span>
                   </div>
                 </div>
 
-                <div
-                  style={{
-                    padding: '16px',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    border: '1px solid rgba(239, 68, 68, 0.3)',
-                    borderRadius: '6px',
-                    color: '#fca5a5',
-                    fontFamily: 'monospace',
-                    whiteSpace: 'pre-wrap',
-                    overflowX: 'auto',
-                    fontSize: '0.85rem'
-                  }}
-                >
-                  {typeof errorTask.error === 'object'
-                    ? JSON.stringify(errorTask.error, null, 2)
-                    : String(errorTask.error)}
-                </div>
+                {selectedTask.status === 'failed' && selectedTask.error ? (
+                  <div
+                    style={{
+                      padding: '16px',
+                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                      borderRadius: '6px',
+                      color: 'var(--danger-red-light)',
+                      fontFamily: 'monospace',
+                      whiteSpace: 'pre-wrap',
+                      overflowX: 'auto',
+                      fontSize: '0.85rem',
+                      marginTop: '16px'
+                    }}
+                  >
+                    {typeof selectedTask.error === 'object'
+                      ? JSON.stringify(selectedTask.error, null, 2)
+                      : String(selectedTask.error)}
+                  </div>
+                ) : (
+                  <></>
+                )}
               </div>
 
               <div className="modal-footer">
-                <button className="btn-secondary" onClick={() => setErrorTask(null)}>
+                <button className="btn-secondary" onClick={() => setSelectedTask(null)}>
                   Close
                 </button>
               </div>

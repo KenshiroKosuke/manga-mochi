@@ -3,7 +3,7 @@ import { AppConfig } from 'src/types/appConfig'
 import { MangaPlugin } from 'src/types/plugin'
 import DownloadQueue from './DownloadQueue'
 
-export default function MainTab({
+export default function DownloadsTab({
   config,
   plugins
 }: {
@@ -76,57 +76,11 @@ export default function MainTab({
     }
   }
 
-  // const handleStart = async (): Promise<void> => {
-  //   if (!url) return
-  //   setStatus({ type: 'loading', msg: 'Downloading...' })
-  //   try {
-  //     const result = await window.backendAPI.addToQueue(url)
-  //     console.log(JSON.stringify(result))
-  //     if (result.success) {
-  //       setStatus({ type: 'success', msg: result.data })
-  //       // Optional: Reset URL after successful download
-  //       // setUrl(''); setMatchedPlugin(null);
-  //     } else {
-  //       const error = result.error
-  //       let code = `[${result.error.errorCode}]`
-  //       if (error.errorCode === 'INVALID_CHAPTER_URL_ERROR') {
-  //         setStatus({ type: 'error', msg: `${code} ${error.message}` })
-  //       } else if (error.errorCode === 'NO_PAGE_ERROR') {
-  //         setStatus({
-  //           type: 'error',
-  //           msg: `${code} ${error.message} Hint: ${error.hint}`
-  //         })
-  //       } else if (error.errorCode === 'INVALID_CONFIG_ERROR') {
-  //         setStatus({
-  //           type: 'error',
-  //           msg: `${code} ${error.message}`
-  //         })
-  //       } else if (error.errorCode === 'EXTRACTION_FAILED_ERROR') {
-  //         setStatus({
-  //           type: 'error',
-  //           msg: `${code} ${error.message}`
-  //         })
-  //       } else {
-  //         setStatus({
-  //           type: 'error',
-  //           msg: `[UnknownError] ${JSON.stringify(error)}`
-  //         })
-  //       }
-  //     }
-  //   } catch (error: unknown) {
-  //     let message = 'Error occurred'
-  //     if (error instanceof Error) {
-  //       message = error.message
-  //     }
-  //     setStatus({ type: 'error', msg: message })
-  //   }
-  // }
-
   return (
     <>
-      <div className="main-header">
-        <h1 className="main-title">New Download</h1>
-        <p className="main-subtitle">
+      <div className="downloads-tab-header">
+        <h1 className="downloads-tab-title">New Download</h1>
+        <p className="downloads-tab-subtitle">
           Paste the URL of the chapter or series you want to download.
         </p>
       </div>
@@ -142,20 +96,14 @@ export default function MainTab({
         />
         {/* Dynamic Button based on matched state */}
         {!matchedPlugin ? (
-          <button
-            className="btn-primary"
-            onClick={handleCheck}
-            disabled={!url}
-            style={{ backgroundColor: !url ? '#4b5563' : undefined }}
-          >
+          <button className="btn-primary" onClick={handleCheck} disabled={!url}>
             Check URL
           </button>
         ) : (
           <button
-            className="btn-primary"
+            className="btn-primary btn-success"
             onClick={handleStart}
             disabled={status.type === 'loading'}
-            style={{ backgroundColor: '#22c55e' }}
           >
             {status.type === 'loading' ? 'Processing...' : 'Start Download'}
           </button>

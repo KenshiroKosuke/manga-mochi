@@ -3,17 +3,17 @@ import ConfigPopup from './ConfigPopup'
 import { AppConfig } from 'src/types/appConfig'
 import { MangaPlugin } from 'src/types/plugin'
 
-interface SidebarProps {
+interface ConfigsTabProps {
   config: AppConfig
   plugins: MangaPlugin[]
   onConfigUpdate: (newConfig: AppConfig) => void
 }
 
-export default function Sidebar({
+export default function ConfigsTab({
   config,
   plugins,
   onConfigUpdate
-}: SidebarProps): React.JSX.Element {
+}: ConfigsTabProps): React.JSX.Element {
   const [searchTerm, setSearchTerm] = useState('')
   const [editingSiteId, setEditingSiteId] = useState<string | null>(null)
 
@@ -82,8 +82,8 @@ export default function Sidebar({
   )
 
   return (
-    <div className="sidebar">
-      <div className="sidebar-header">
+    <div className="configs-tab">
+      <div className="configs-tab-header">
         <button className="btn-global" onClick={() => setEditingSiteId('GLOBAL_SETTINGS')}>
           <span>⚙ Global Settings</span>
         </button>
@@ -96,7 +96,7 @@ export default function Sidebar({
         />
       </div>
 
-      <div className="sidebar-list">
+      <div className="configs-tab-list">
         {visiblePinned.length > 0 && (
           <div className="list-section">
             <div className="section-label">Pinned</div>
