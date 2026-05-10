@@ -3,8 +3,9 @@ import ConfigsTab from './components/ConfigsTab'
 import DownloadsTab from './components/DownloadsTab'
 import { AppConfig } from 'src/types/appConfig'
 import { MangaPlugin } from 'src/types/plugin'
+import daiChan from '../src/assets/dai-chan.svg'
 
-type TabID = 'downloads' | 'configs' | 'history'
+type TabID = 'downloads' | 'configs' | '???'
 
 interface TabButtonProps {
   id: TabID
@@ -59,7 +60,7 @@ export default function App(): React.JSX.Element {
       <nav className="tab-navigation">
         <TabButton id="downloads" label="Downloads" activeTab={activeTab} onClick={setActiveTab} />
         <TabButton id="configs" label="Configs" activeTab={activeTab} onClick={setActiveTab} />
-        <TabButton id="history" label="History" activeTab={activeTab} onClick={setActiveTab} />
+        <TabButton id="???" label="???" activeTab={activeTab} onClick={setActiveTab} />
       </nav>
 
       {/**
@@ -77,10 +78,15 @@ export default function App(): React.JSX.Element {
         <div className="tab-pane" style={{ display: activeTab === 'configs' ? undefined : 'none' }}>
           <ConfigsTab config={config} plugins={plugins} onConfigUpdate={handleConfigUpdate} />
         </div>
-
-        <div className="tab-pane" style={{ display: activeTab === 'history' ? undefined : 'none' }}>
-          <h1 className="history-tab-title">History</h1>
-          <p className="history-tab-subtitle">Past downloads will appear here in the future.</p>
+        <div className="tab-pane" style={{ display: activeTab === '???' ? undefined : 'none' }}>
+          <div className="todo-tab" style={{ backgroundColor: 'antiquewhite' }}>
+            <div
+              style={{ flex: 1, flexDirection: 'row', display: 'flex', justifyContent: 'center' }}
+            >
+              <img src={daiChan} height={160}></img>
+              <h1 style={{ fontFamily: 'cursive', color: 'black' }}> Pi...</h1>
+            </div>
+          </div>
         </div>
       </div>
     </div>
