@@ -40,6 +40,7 @@ function createWindow(): BrowserWindow {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+  mainWindow.setTitle('MangaMochi')
 
   return mainWindow
 }

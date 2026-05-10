@@ -6,15 +6,16 @@ abstract class MainResponseError extends Error {
   constructor(message: string, data: object = {}) {
     super(message)
     Object.assign(this, data)
-    Object.setPrototypeOf(this, MainResponseError.prototype)
+    // Dynamically set the prototype to the actual subclass being instantiated
+    Object.setPrototypeOf(this, new.target.prototype)
   }
 }
-MainResponseError.prototype.name = MainResponseError.name
 
 export class InvalidChapterUrlError extends MainResponseError {
   readonly errorCode = 'INVALID_CHAPTER_URL_ERROR'
   constructor(data: IpcMainErrorDataMap['INVALID_CHAPTER_URL_ERROR']) {
     super(`URL does not match any supported website.`, data)
+    this.name = 'InvalidChapterUrlError'
   }
 }
 
@@ -22,6 +23,7 @@ export class NoMatchingPluginError extends MainResponseError {
   readonly errorCode = 'NO_MATCHING_PLUGIN_ERROR'
   constructor(data: IpcMainErrorDataMap['NO_MATCHING_PLUGIN_ERROR']) {
     super(`URL does not match any supported plugin.`, data)
+    this.name = 'NoMatchingPluginError'
   }
 }
 
@@ -35,6 +37,7 @@ export class InvalidConfigError extends MainResponseError {
       )
       .join(' | ')
     super(`Some configs are invalid. Please check your config file. ${configErrorString}`, data)
+    this.name = 'InvalidConfigError'
   }
 }
 
@@ -45,6 +48,7 @@ export class NoPageError extends MainResponseError {
       `Cannot find any pages. This can indicate lack of credentials or manga server API change.`,
       data
     )
+    this.name = 'NoPageError'
   }
 }
 
@@ -52,6 +56,7 @@ export class ExtractionFailedError extends MainResponseError {
   readonly errorCode = 'EXTRACTION_FAILED_ERROR'
   constructor(data: IpcMainErrorDataMap['EXTRACTION_FAILED_ERROR']) {
     super(`Failed to extract data from ${data.plugin} response: ${data.reason}`, data)
+    this.name = 'ExtractionFailedError'
   }
 }
 
@@ -59,5 +64,6 @@ export class DownloadCancelledError extends MainResponseError {
   readonly errorCode = 'DOWNLOAD_CANCELLED'
   constructor() {
     super('The download was cancelled by the user.')
+    this.name = 'DownloadCancelledError'
   }
 }
