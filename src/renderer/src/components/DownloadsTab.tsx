@@ -119,13 +119,13 @@ export default function DownloadsTab({
 
       <DownloadQueue />
 
-      <div className="config-footer">
-        <div className="footer-info">
-          <div className="info-item">
+      <div className="downloads-tab-footer">
+        <div className="downloads-tab-footer-info">
+          <div className="downloads-tab-footer-info-item">
             <label>Save Location</label>
             <div>{config.global.downloadDir || 'Not set'}</div>
           </div>
-          <div className="info-item">
+          <div className="downloads-tab-footer-info-item">
             <label>Naming Schema</label>
             <div>{config.global.namingSchema}</div>
           </div>

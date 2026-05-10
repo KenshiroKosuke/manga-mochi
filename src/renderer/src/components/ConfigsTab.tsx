@@ -15,7 +15,7 @@ export default function ConfigsTab({
   onConfigUpdate
 }: ConfigsTabProps): React.JSX.Element {
   const [searchTerm, setSearchTerm] = useState('')
-  const [editingSiteId, setEditingSiteId] = useState<string | null>(null)
+  const [activeCategory, setActiveCategory] = useState<string>('GLOBAL_SETTINGS')
 
   // Toggle Pin Logic
   const togglePin = (siteId: string): void => {
@@ -52,15 +52,22 @@ export default function ConfigsTab({
     plugin: MangaPlugin
     isPinned: boolean
   }): React.JSX.Element => (
-    <div className={`site-item ${isPinned ? 'pinned' : ''}`}>
+    <div
+      className={`site-item ${isPinned ? 'pinned' : ''} ${activeCategory === plugin.id ? 'active' : ''}`}
+      onClick={() => setActiveCategory(plugin.id)}
+      style={{
+        cursor: 'pointer',
+        backgroundColor: activeCategory === plugin.id ? 'var(--bg-hover)' : 'transparent'
+      }}
+    >
       <span className="site-name">{plugin.id}</span>
       <div className="item-actions">
-        <button className="btn-config" onClick={() => setEditingSiteId(plugin.id)}>
-          Config
-        </button>
         <button
           className={`btn-pin ${isPinned ? 'active' : ''}`}
-          onClick={() => togglePin(plugin.id)}
+          onClick={(e) => {
+            e.stopPropagation() // Prevent row click when pinning
+            togglePin(plugin.id)
+          }}
           title={isPinned ? 'Unpin' : 'Pin to top'}
         >
           {/* Simple Pin Icon */}
@@ -83,51 +90,68 @@ export default function ConfigsTab({
 
   return (
     <div className="configs-tab">
-      <div className="configs-tab-header">
-        <button className="btn-global" onClick={() => setEditingSiteId('GLOBAL_SETTINGS')}>
-          <span>⚙ Global Settings</span>
-        </button>
-        <input
-          type="text"
-          className="search-input"
-          placeholder="Search..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+      {/* LEFT SIDEBAR: Categories & Plugins */}
+      <div className="configs-sidebar">
+        <div className="configs-tab-header" style={{ padding: '16px' }}>
+          <button
+            className="btn-global"
+            onClick={() => setActiveCategory('GLOBAL_SETTINGS')}
+            style={{
+              width: '100%',
+              padding: '12px',
+              marginBottom: '12px',
+              textAlign: 'left',
+              cursor: 'pointer',
+              backgroundColor:
+                activeCategory === 'GLOBAL_SETTINGS' ? 'var(--bg-hover)' : 'transparent',
+              border:
+                activeCategory === 'GLOBAL_SETTINGS'
+                  ? '1px solid var(--accent-blue)'
+                  : '1px solid var(--border-color)'
+            }}
+          >
+            <span>⚙ Global Settings</span>
+          </button>
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search sites..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ width: '100%', boxSizing: 'border-box' }}
+          />
+        </div>
+
+        <div className="configs-tab-list">
+          {visiblePinned.length > 0 && (
+            <div className="list-section">
+              <div className="section-label">Pinned</div>
+              {visiblePinned.map((p) => (
+                <SiteItem key={p.id} plugin={p} isPinned={true} />
+              ))}
+            </div>
+          )}
+
+          {visibleUnpinned.length > 0 && (
+            <div className="list-section">
+              <div className="section-label">All Sites</div>
+              {visibleUnpinned.map((p) => (
+                <SiteItem key={p.id} plugin={p} isPinned={false} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="configs-tab-list">
-        {visiblePinned.length > 0 && (
-          <div className="list-section">
-            <div className="section-label">Pinned</div>
-            {visiblePinned.map((p) => (
-              <SiteItem key={p.id} plugin={p} isPinned={true} />
-            ))}
-          </div>
-        )}
-
-        {visibleUnpinned.length > 0 && (
-          <div className="list-section">
-            <div className="section-label">All Sites</div>
-            {visibleUnpinned.map((p) => (
-              <SiteItem key={p.id} plugin={p} isPinned={false} />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {editingSiteId && (
+      {/* RIGHT CONTENT AREA: Configuration Form */}
+      <div className="configs-content">
         <ConfigPopup
-          siteId={editingSiteId}
+          siteId={activeCategory}
           config={config}
           plugins={plugins}
-          onClose={() => setEditingSiteId(null)}
-          onSave={(newConf) => {
-            onConfigUpdate(newConf)
-            setEditingSiteId(null)
-          }}
+          onSave={(newConf) => onConfigUpdate(newConf)}
         />
-      )}
+      </div>
     </div>
   )
 }
