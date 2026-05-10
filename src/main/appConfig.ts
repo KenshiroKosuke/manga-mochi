@@ -8,7 +8,13 @@ const CONFIG_DIRECTORY = path.join(os.homedir(), 'mangamochi')
 const CONFIG_PATH = path.join(CONFIG_DIRECTORY, CONFIG_FILENAME)
 
 const DEFAULT_CONFIG: AppConfig = {
-  global: { downloadDir: '', namingSchema: 'p_00X', pinnedSites: [] },
+  global: {
+    downloadDir: '',
+    namingSchema: 'p_XXX',
+    pinnedSites: [],
+    downloadForceWhenDirExisted: false,
+    enableNotifications: false
+  },
   sites: {}
 }
 

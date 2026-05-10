@@ -1,4 +1,4 @@
-import { BrowserWindow, dialog, WebContents } from 'electron'
+import { BrowserWindow, dialog, WebContents, Notification } from 'electron'
 import { NoMatchingPluginError, DownloadCancelledError } from '../errors'
 import { AppConfig } from '../../types/appConfig'
 import { MangaPlugin } from '../../types/plugin'
@@ -23,6 +23,7 @@ export class DownloadQueueManager {
    */
   private broadcastQueue(): void {
     this.webContents.send('queue-updated', this.queue)
+    // this.updateTaskbarProgress()
   }
 
   public addTask(taskInfo: { id: string; url: string }): void {
@@ -119,13 +120,23 @@ export class DownloadQueueManager {
 
       nextTask.status = 'completed'
       nextTask.progress = 100
+      this.notifyDownloadComplete(nextTask.mangaTitle, nextTask.chapterTitle)
     } catch (error: unknown) {
+      console.log(error instanceof DownloadCancelledError)
+      // @ts-ignore just to print name real quick
+      console.log('name' in error && error?.name)
       if (error instanceof DownloadCancelledError) {
         nextTask.status = 'cancelled'
       } else {
         console.error(`Download failed for ${nextTask.url}:`, error)
         nextTask.status = 'failed'
-        nextTask.error = formatResponseError(error)
+        const formattedError = formatResponseError(error)
+        nextTask.error = formattedError
+        this.notifyDownloadFailed(
+          nextTask.mangaTitle,
+          nextTask.chapterTitle,
+          formattedError.message
+        )
       }
     } finally {
       this.activeController = null
@@ -158,5 +169,61 @@ export class DownloadQueueManager {
       if (task.status === 'pending') task.status = 'cancelled'
     })
     this.broadcastQueue()
+  }
+
+  // private updateTaskbarProgress(): void {
+  //   // Find all tasks that are currently active
+  //   const activeTasks = this.queue.filter(
+  //     (task) => task.status === 'downloading' || task.status === 'pending'
+  //   )
+
+  //   // Get the main window safely (handles cases where the window might be closed/minimized on macOS)
+  //   const mainWindow = BrowserWindow.getAllWindows()[0]
+  //   if (!mainWindow) return
+
+  //   if (activeTasks.length === 0) {
+  //     // A value of -1 removes the progress bar entirely
+  //     mainWindow.setProgressBar(-1)
+  //     return
+  //   }
+
+  //   // Calculate the average progress across all active tasks
+  //   const totalProgress = activeTasks.reduce((acc, task) => acc + task.progress, 0)
+  //   const averageProgress = totalProgress / activeTasks.length
+
+  //   // Electron expects a value between 0.0 and 1.0
+  //   // Note: Windows also supports different states like 'error' or 'paused' which you can pass as a second argument!
+  //   mainWindow.setProgressBar(averageProgress / 100)
+  // }
+
+  private notifyDownloadComplete(mangaTitle: string, chapterTitle: string): void {
+    const config = this.getConfig()
+    if (config.global.enableNotifications !== true) return
+
+    // Always check if the OS supports notifications first
+    if (Notification.isSupported()) {
+      new Notification({
+        title: 'Download Complete',
+        body: `${mangaTitle} - ${chapterTitle} has finished downloading.`
+        // Optional: Add a custom icon path here
+        // icon: path.join(__dirname, '../../resources/success-icon.png')
+      }).show()
+    }
+  }
+
+  private notifyDownloadFailed(
+    mangaTitle: string,
+    chapterTitle: string,
+    errorMessage: string
+  ): void {
+    const config = this.getConfig()
+    if (config.global.enableNotifications !== true) return
+
+    if (Notification.isSupported()) {
+      new Notification({
+        title: 'Download Failed',
+        body: `Failed to download ${mangaTitle} - ${chapterTitle}: ${errorMessage}`
+      }).show()
+    }
   }
 }
