@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   release:
     runs-on: ${{ matrix.os }}
@@ -31,6 +34,8 @@ jobs:
         run: pnpm install
 
       - name: Build and Publish to GitHub
-        run: pnpm run build:win
+        run: |
+          pnpm run build
+          pnpm exec electron-builder --win --publish always
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
