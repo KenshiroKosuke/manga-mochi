@@ -1,0 +1,11 @@
+#!/bin/sh
+
+### For issue 'exec: node: not found'
+### - https://github.com/Schniz/fnm/issues/668
+### - https://typicode.github.io/husky/how-to.html#node-version-managers-and-guis
+
+# 1. Run typechecking on the whole project
+pnpm run typecheck
+
+# 2. Run formatting and linting ONLY on staged files
+pnpm exec lint-staged
