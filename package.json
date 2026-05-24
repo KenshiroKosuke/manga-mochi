@@ -25,7 +25,8 @@
     "build:win": "pnpm build && electron-builder --win",
     "build:mac": "electron-vite build && electron-builder --mac",
     "build:linux": "electron-vite build && electron-builder --linux",
-    "prepare": "husky"
+    "prepare": "husky",
+    "patch": "pnpm version patch"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
