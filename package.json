@@ -6,7 +6,7 @@
   "author": "KenshiroKosuke",
   "homepage": "https://github.com/KenshiroKosuke/manga-mochi",
   "engines": {
-    "node": ">=20",
+    "node": ">=22",
     "pnpm": ">=10"
   },
   "scripts": {
@@ -26,7 +26,9 @@
     "build:mac": "electron-vite build && electron-builder --mac",
     "build:linux": "electron-vite build && electron-builder --linux",
     "prepare": "husky",
-    "patch": "pnpm version patch"
+    "patch": "pnpm version patch",
+    "minor": "pnpm version minor",
+    "major": "pnpm version major"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
