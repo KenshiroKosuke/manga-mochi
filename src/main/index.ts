@@ -1,7 +1,7 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import icon from '../../resources/manga-mochi_icon.ico?asset'
+import icon from '../../resources/icon.ico?asset'
 import { loadConfig, saveConfig } from './appConfig'
 import { loadPlugins } from './loadPlugins'
 import { ipcMainRegisterHandler } from './responseWrapper'
