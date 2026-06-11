@@ -71,12 +71,14 @@ const getChapterMetaData: GetChapterMetaDataFunction = async (url) => {
   if (comiciViewerId == undefined) {
     throw new ExtractionFailedError({ plugin: id, reason: 'missing #comici-viewer' })
   }
-  const titleElement = root.querySelector('[data-e2e="ehSeriesLink"]')
+  // const titleElement = root.querySelector('[data-e2e="ehSeriesLink"]')
+  const titleElement = root.querySelector('.ep-h-main-h-series')
   const title = titleElement?.textContent.trim()
   if (title == undefined) {
     throw new ExtractionFailedError({ plugin: id, reason: 'missing title element' })
   }
-  const chapterElement = root.querySelector('[data-e2e="ehEpisodeTtl"]')
+  // const chapterElement = root.querySelector('[data-e2e="ehEpisodeTtl"]')
+  const chapterElement = root.querySelector('.ep-main-h-h')
   const chapterNumber = chapterElement?.textContent.trim()
   if (chapterNumber == undefined) {
     throw new ExtractionFailedError({ plugin: id, reason: 'missing chapter element' })
